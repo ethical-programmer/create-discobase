@@ -25,5 +25,4 @@ const eventsPath = './events';
     }
 })();
 
-
 // You can start writing your custom bot logic from here. Add new features, commands, or events!
