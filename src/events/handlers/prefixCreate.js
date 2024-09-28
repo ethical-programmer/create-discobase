@@ -1,0 +1,111 @@
+const chalk = require("chalk");
+const config = require('../../../config.json');
+const { getSimilarCommands } = require('../../functions/handlers/similarity');
+
+module.exports = {
+    name: 'messageCreate',
+    async execute(message, client) {
+        // 1. Initial Checks
+        const prefix = config.prefix.value;
+        const content = message.content.toLowerCase();
+
+        if (!content.startsWith(prefix) || message.author.bot) return;
+
+        // 2. Command Extraction
+        const args = content.slice(prefix.length).trim().split(/ +/);
+        const commandName = args.shift().toLowerCase();
+        
+        // 3. Command Lookup
+        let command = client.prefix.get(commandName);
+        if (!command) {
+            command = Array.from(client.prefix.values()).find(
+                (cmd) => cmd.aliases && cmd.aliases.includes(commandName)
+            );
+        }
+
+        // Handle unknown command
+        if (!command) {
+            console.log(chalk.yellow.bold('WARNING: ') + `Unknown command: "${commandName}"`);
+
+            // Get similar commands
+            const similarCommands = getSimilarCommands(commandName, Array.from(client.prefix.values()));
+            if (similarCommands.length > 0) {
+                return await message.reply(`Command not found. Did you mean: ${similarCommands.join(', ')}?`);
+            } else {
+                return await message.reply(`Command '${commandName}' doesn't exist.`);
+            }
+        }
+
+        // 4. Cooldown Handling
+        if (!client.cooldowns) {
+            client.cooldowns = new Map();
+        }
+
+        const now = Date.now();
+        const cooldownAmount = (command.cooldown || 3) * 1000;
+
+        if (!client.cooldowns.has(command.name)) {
+            client.cooldowns.set(command.name, new Map());
+        }
+
+        const timestamps = client.cooldowns.get(command.name);
+
+        // Check if user is on cooldown
+        if (timestamps.has(message.author.id)) {
+            const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+            if (now < expirationTime) {
+                const timeLeft = (expirationTime - now) / 1000;
+                return message.reply({
+                    content: `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the "${command.name}" command.`,
+                });
+            }
+        }
+
+        // Set the timestamp for the user
+        timestamps.set(message.author.id, now);
+
+        // 5. Permission Checks
+        if (command.adminOnly && !config.bot.admins.includes(message.author.id)) {
+            return message.reply({
+                content: `This command is admin-only. You cannot run this command.`,
+            });
+        }
+
+        if (command.ownerOnly && message.author.id !== config.bot.ownerId) {
+            return await message.reply({
+                content: `This command is owner-only. You cannot run this command.`,
+            });
+        }
+
+        if (command.userPermissions) {
+            const memberPermissions = message.member.permissions;
+            const missingPermissions = command.userPermissions.filter(perm => !memberPermissions.has(perm));
+            if (missingPermissions.length) {
+                return message.reply({
+                    content: `You lack the necessary permissions to execute this command: **${missingPermissions.join(", ")}**`,
+                });
+            }
+        }
+
+        if (command.botPermissions) {
+            const botPermissions = message.guild.members.me.permissions;
+            const missingBotPermissions = command.botPermissions.filter(perm => !botPermissions.has(perm));
+            if (missingBotPermissions.length) {
+                return message.reply({
+                    content: `I lack the necessary permissions to execute this command: **${missingBotPermissions.join(", ")}**`,
+                });
+            }
+        }
+
+        // 6. Command Execution
+        try {
+            await command.run(client, message, args);
+        } catch (error) {
+            console.log(chalk.red.bold('ERROR: ') + `Failed to execute command "${commandName}".`);
+            console.error(error);
+            message.reply({
+                content: 'There was an error while executing this command!',
+            });
+        }
+    }
+};
