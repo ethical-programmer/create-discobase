@@ -39,7 +39,7 @@ module.exports = {
             const latencyFormatted = `${latency.toString().substring(0, 2)}ms`;
             const emoji = "⏱️";
 
-            await interaction.editReply(`${emoji} Pong! Latency is ${latencyFormatted}!`);
+            await interaction.reply(`${emoji} Pong! Latency is ${latencyFormatted}!`);
         } catch (error) {
             console.error('An error occurred while executing the command:', error);
         }

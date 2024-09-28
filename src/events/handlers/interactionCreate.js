@@ -1,4 +1,4 @@
-const { Interaction, Permissions } = require("discord.js");
+const { Interaction, Permissions, EmbedBuilder } = require("discord.js");
 const chalk = require("chalk");
 const config = require('../../../config.json');
 
@@ -80,8 +80,29 @@ module.exports = {
 
         try {
             await command.execute(interaction, client);
+            // Create an embed to log the command execution
+            const logEmbed = new EmbedBuilder()
+                .setColor('#0099ff')
+                .setTitle('Command Executed')
+                .addFields(
+                    { name: 'User', value: `${interaction.user.tag} (${interaction.user.id})`, inline: true },
+                    { name: 'Command', value: `/${command.data.name}`, inline: true },
+                    { name: 'Server', value: `${interaction.guild.name} (${interaction.guild.id})`, inline: true },
+                    { name: 'Timestamp', value: new Date().toLocaleString(), inline: true }
+                )
+                .setTimestamp();
+
+            // Send the embed to the specified logs channel
+            if (config.logging.commandLogsChannelId) {
+                const logsChannel = client.channels.cache.get(config.logging.commandLogsChannelId);
+                if (logsChannel) {
+                    await logsChannel.send({ embeds: [logEmbed] });
+                } else {
+                    console.error(chalk.yellow(`Logs channel with ID ${config.logging.commandLogsChannelId} not found.`));
+                }
+            }
         } catch (error) {
-            console.error(chalk.red(`Error executing command "${command.name}":`), error);
+            console.error(chalk.red(`Error executing command "${command.data.name}":`), error);
             await interaction.reply({
                 content: 'There was an error while executing this command!',
                 ephemeral: true

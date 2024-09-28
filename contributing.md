@@ -13,7 +13,7 @@ First of all, thank you for considering contributing to discoBase! Your support 
 
 ### 1. Reporting Bugs
 
-If you find a bug, please report it by opening an [issue](https://github.com/your-repo/discoBase/issues). Provide as much detail as possible:
+If you find a bug, please report it by opening an [issue]([https://github.com/your-repo/discoBase/issues](https://github.com/ethical-programmer/discobase/issues)). Provide as much detail as possible:
 
 - Steps to reproduce the bug
 - Version of discoBase you're using
@@ -21,7 +21,7 @@ If you find a bug, please report it by opening an [issue](https://github.com/you
 
 ### 2. Suggesting Features
 
-Do you have an idea for a new feature? We'd love to hear it! Open an [issue](https://github.com/your-repo/discoBase/issues) and explain the feature you'd like to see, along with any use cases.
+Do you have an idea for a new feature? We'd love to hear it! Open an [issue]([https://github.com/your-repo/discoBase/issues](https://github.com/ethical-programmer/discobase/issues)) and explain the feature you'd like to see, along with any use cases.
 
 ### 3. Submitting Code Changes
 
@@ -30,7 +30,7 @@ To submit a code change:
 1. **Fork the repository** on GitHub.
 2. **Clone your fork** locally:
     ```bash
-    git clone https://github.com/your-username/discoBase.git
+    git clone https://github.com/ethical-programmer/discobase
     ```
 3. **Create a new branch** for your changes:
     ```bash

@@ -1,5 +1,6 @@
 const chalk = require("chalk");
 const config = require('../../../config.json');
+const { EmbedBuilder } = require('discord.js');
 const { getSimilarCommands } = require('../../functions/handlers/similarity');
 
 module.exports = {
@@ -100,6 +101,27 @@ module.exports = {
         // 6. Command Execution
         try {
             await command.run(client, message, args);
+            // Create an embed to log the command execution
+            const logEmbed = new EmbedBuilder()
+                .setColor('Blue')
+                .setTitle('Command Executed')
+                .addFields(
+                    { name: 'User', value: `${message.author.tag} (${message.author.id})`, inline: true },
+                    { name: 'Command', value: `${config.prefix.value}${command.name}`, inline: true },
+                    { name: 'Server', value: `${message.guild.name} (${message.guild.id})`, inline: true },
+                    { name: 'Timestamp', value: new Date().toLocaleString(), inline: true }
+                )
+                .setTimestamp();
+
+            // Send the embed to the specified logs channel
+            if (config.logging.commandLogsChannelId) {
+                const logsChannel = client.channels.cache.get(config.logging.commandLogsChannelId);
+                if (logsChannel) {
+                    await logsChannel.send({ embeds: [logEmbed] });
+                } else {
+                    console.error(chalk.yellow(`Logs channel with ID ${config.logging.commandLogsChannelId} not found.`));
+                }
+            }
         } catch (error) {
             console.log(chalk.red.bold('ERROR: ') + `Failed to execute command "${commandName}".`);
             console.error(error);

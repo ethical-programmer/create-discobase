@@ -12,7 +12,7 @@
     ]
   },
   "database": {
-    "mongodbUrl": "MONGO_DB_URL"
+    "mongodbUrl": "YOUR_MONGODB_URL"
   },
   "logging": {
     "guildJoinLogsId": "GUILD_JOIN_LOGS_CHANNEL_ID",
