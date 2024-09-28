@@ -67,6 +67,20 @@ To run this project, you will need to provide the necessary values in the config
 | `logging.errorLogs`            | `string` | **Optional**. Webhook URL for error logging                   |
 | `prefix.value`                 | `string` | **Optional**. Command prefix for non-slash commands           |
 
+
+
+## Command Options
+
+| Option              | Type        | Description                                                                                          |
+| :------------------ | :---------- | :--------------------------------------------------------------------------------------------------- |
+| `ownerOnly`         | `boolean`   | **Optional**. If `true`, the command can only be run by the bot owner.                                |
+| `adminOnly`         | `boolean`   | **Optional**. If `true`, the command can only be used by bot admins specified in the config file.      |
+| `devOnly`           | `boolean`   | **Optional**. If `true`, the command is only registered in specific developer servers (slash commands only). |
+| `botPermissions`    | `array`     | **Optional**. List of permissions the bot needs to execute the command (e.g., `'SendMessages'`, `'ManageChannels'`). |
+| `userPermissions`   | `array`     | **Optional**. List of permissions the user needs to execute the command (e.g., `'Administrator'`, `'KickMembers'`). |
+| `cooldown`          | `number`    | **Optional**. The cooldown time in seconds before the command can be reused. Default is 3 seconds.    |
+
+
 ## Authors
 
 - [@ethical_dev](https://discord.com/users/740117727322046538)
