@@ -111,4 +111,8 @@ If you have any feedback or suggestion, please reach out to us at [Discord Commu
 
 ## Support
 
+<<<<<<< HEAD
 For support & questions, join our Discord server: [Discord Community](https://discord.gg/ethical-programmer-s-1188398653530984539).
+=======
+For support & questions, join our Discord server: Join our [Discord Community](https://discord.gg/ethical-programmer-s-1188398653530984539).
+>>>>>>> 8528ff1f31966ce22c2a450dca4770c299529d9b
