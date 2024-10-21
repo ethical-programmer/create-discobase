@@ -16,6 +16,15 @@
 ```
 ✨ Supports Latest Discord.js v14.
 ```
+
+
+## 🎉 New Update (v1.0.10) 🎉
+- 🚀 Enhanced Terminal Look: Experience a cleaner and more modern terminal display with colorful logs for success, errors, and info messages.
+- 📝 Auto-Generated Files: Commands, events, and prefix commands now come with pre-built templates to save you time.
+- ⚡ Optimized File Watching: Automatic detection and template insertion for new command, event, and prefix files.
+
+
+
 ## Features
 
 - 🎉 Command Handler
@@ -111,8 +120,4 @@ If you have any feedback or suggestion, please reach out to us at [Discord Commu
 
 ## Support
 
-<<<<<<< HEAD
 For support & questions, join our Discord server: [Discord Community](https://discord.gg/ethical-programmer-s-1188398653530984539).
-=======
-For support & questions, join our Discord server: Join our [Discord Community](https://discord.gg/ethical-programmer-s-1188398653530984539).
->>>>>>> 8528ff1f31966ce22c2a450dca4770c299529d9b

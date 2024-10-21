@@ -7,6 +7,8 @@ const path = require('path');
 const { checkMissingIntents } = require('./functions/handlers/requiredIntents');
 const { antiCrash } = require('./functions/handlers/antiCrash');
 antiCrash();
+require('./functions/handlers/watchFolders');
+
 
 const eventsPath = './events';
 
