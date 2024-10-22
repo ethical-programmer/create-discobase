@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiscoBase - Commands</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/1QRfxtD/Untitled-design.png" type="image/x-icon">
+    <link rel="stylesheet" href="commands.css">
+   
+</head>
+
+<body>
+    <div class="navbar">
+        <h1 class="logo">DiscoBase</h1>
+        <nav>
+            <ul>
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/config" class="nav-link">Manage Configuration</a></li>
+                <li><a href="/commands" class="nav-link">Commands</a></li>
+                <li><a href="/errors" class="nav-link">Errors</a></li>
+                <li><a href="/guilds" class="nav-link">Guilds</a></li>
+
+                <li><a href="/bot" class="nav-link">Bot</a></li>
+
+
+            </ul>
+        </nav>
+    </div>
+
+    <div class="container">
+        <h1 class="title">Commands</h1>
+
+        <div class="commands-section">
+            <h2>Slash Commands</h2>
+            <div class="command-cards" id="slash-commands"></div>
+        </div>
+
+        <div class="commands-section">
+            <h2>Prefix Commands</h2>
+            <div class="command-cards" id="prefix-commands"></div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchCommands() {
+            try {
+                const response = await fetch('/api/commands');
+                const commands = await response.json();
+
+                const slashCommandsContainer = document.getElementById('slash-commands');
+                const prefixCommandsContainer = document.getElementById('prefix-commands');
+
+                function createCommandCard(command, index) {
+                    const card = document.createElement('div');
+                    card.className = 'command-card';
+                    card.style.animationDelay = `${index * 0.1}s`;
+                    card.innerHTML = `<h3>${command.name}</h3><p>${command.description}</p>`;
+                    return card;
+                }
+
+                commands.slash.forEach((command, index) => {
+                    slashCommandsContainer.appendChild(createCommandCard(command, index));
+                });
+
+                commands.prefix.forEach((command, index) => {
+                    prefixCommandsContainer.appendChild(createCommandCard(command, index));
+                });
+            } catch (error) {
+                console.error('Error fetching commands:', error);
+            }
+        }
+
+        fetchCommands();
+    </script>
+</body>
+
+</html>

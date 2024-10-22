@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiscoBase - Error Logs</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/1QRfxtD/Untitled-design.png" type="image/x-icon">
+    <link rel="stylesheet" href="errors.css">
+</head>
+
+<body>
+    <div class="navbar">
+        <h1 class="logo">DiscoBase</h1>
+        <nav>
+            <ul>
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/config" class="nav-link">Manage Configuration</a></li>
+                <li><a href="/commands" class="nav-link">Commands</a></li>
+                <li><a href="/errors" class="nav-link">Error</a></li>
+                <li><a href="/guilds" class="nav-link">Guilds</a></li>
+                <li><a href="/bot" class="nav-link">Bot</a></li>
+
+
+            </ul>
+        </nav>
+    </div>
+
+    <div class="container">
+        <h1 class="title">Error Logs</h1>
+        <div id="errorLogs"></div>
+    </div>
+
+    <script>
+        // Fetch error logs from the server
+        fetch('/api/errors')
+            .then(response => response.json())
+            .then(data => {
+                const errorLogsContainer = document.getElementById('errorLogs');
+
+                // Check if there are any errors
+                if (data.errors.length === 0) {
+                    errorLogsContainer.innerHTML = '<p class="no-errors">No error logs found.</p>';
+                    return;
+                }
+
+                // Display each error log
+                data.errors.forEach((log, index) => {
+                    const logDiv = document.createElement('div');
+                    logDiv.classList.add('error-container');
+                    logDiv.style.animationDelay = `${index * 0.1}s`;
+
+                    const fileName = document.createElement('h3');
+                    fileName.textContent = `Error File: ${log.fileName}`;
+                    logDiv.appendChild(fileName);
+
+                    const errorContent = document.createElement('pre');
+                    errorContent.textContent = log.content;
+                    logDiv.appendChild(errorContent);
+
+                    errorLogsContainer.appendChild(logDiv);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching logs:', error);
+                document.getElementById('errorLogs').innerHTML = '<p class="no-errors">Error loading logs.</p>';
+            });
+    </script>
+</body>
+
+</html>

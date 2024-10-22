@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="config.css">
+    <title>DiscoBase - Configuration Management</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/1QRfxtD/Untitled-design.png" type="image/x-icon">
+
+    <style>
+        :root {
+            --primary-color: #a69cec;
+            --secondary-color: #00cec9;
+            --background-color: #2d3436;
+            --card-background: rgba(255, 255, 255, 0.1);
+            --text-color: #ffffff;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--background-color), #4834d4);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .bot-button {
+            display: flex;
+            align-items: center;
+            margin-left: 2rem;
+            /* Adjust spacing as needed */
+        }
+
+        .bot-button .nav-link {
+            display: flex;
+            align-items: center;
+            background-color: var(--secondary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            color: var(--text-color);
+            transition: background-color 0.3s ease;
+        }
+
+        .bot-button .nav-link:hover {
+            background-color: #009999;
+            /* Darker shade for hover effect */
+        }
+
+        .bot-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 0.5rem;
+        }
+
+        .bot-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .bot-name {
+            font-weight: bold;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        nav ul {
+            list-style-type: none;
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-link {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease, border-bottom 0.3s ease;
+            padding-bottom: 0.25rem;
+        }
+
+        .nav-link:hover {
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--secondary-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h1 class="logo">DiscoBase</h1>
+        <nav>
+            <ul>
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/config" class="nav-link">Manage Configuration</a></li>
+                <li><a href="/commands" class="nav-link">Commands</a></li>
+                <li><a href="/commands" class="nav-link">Errors</a></li>
+                <li><a href="/guilds" class="nav-link">Guilds</a></li>
+
+                <li><a href="/bot" class="nav-link">Bot</a></li>
+                
+              
+
+            </ul>
+        </nav>
+    </div>
+
+    <div class="container">
+        <h1>Configuration Management</h1>
+        <form action="/update-config" method="POST">
+            <div class="form-row">
+                <div class="form-group form-group-special">
+                    <label for="token">Bot Token:</label>
+                    <input type="password" id="token" name="token">
+                </div>
+
+                <div class="form-group form-group-special">
+                    <label for="id">Bot ID:</label>
+                    <input type="text" id="id" name="id">
+                </div>
+
+                <div class="form-group">
+                    <label for="prefix">Command Prefix:</label>
+                    <input type="text" id="prefix" name="prefix">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="admins">Admin IDs (comma-separated):</label>
+                    <input type="text" id="admins" name="admins">
+                </div>
+
+                <div class="form-group">
+                    <label for="ownerId">Owner ID:</label>
+                    <input type="text" id="ownerId" name="ownerId">
+                </div>
+
+                <div class="form-group">
+                    <label for="developerCommandsServerIds">Developer Commands Server IDs:</label>
+                    <input type="text" id="developerCommandsServerIds" name="developerCommandsServerIds">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="mongodbUrl">MongoDB URL:</label>
+                    <input type="password" id="mongodbUrl" name="mongodbUrl">
+                </div>
+
+                <div class="form-group">
+                    <label for="guildJoinLogsId">Guild Join Logs Channel ID:</label>
+                    <input type="text" id="guildJoinLogsId" name="guildJoinLogsId">
+                </div>
+
+                <div class="form-group">
+                    <label for="guildLeaveLogsId">Guild Leave Logs Channel ID:</label>
+                    <input type="text" id="guildLeaveLogsId" name="guildLeaveLogsId">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="commandLogsChannelId">Command Logs Channel ID:</label>
+                    <input type="text" id="commandLogsChannelId" name="commandLogsChannelId">
+                </div>
+
+                <div class="form-group">
+                    <label for="errorLogs">Error Logs Webhook URL:</label>
+                    <input type="password" id="errorLogs" name="errorLogs">
+                </div>
+            </div>
+
+            <button type="submit" class="submit-button">Update Config</button>
+        </form>
+    </div>
+
+
+    <script>
+        window.onload = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('success') === 'true') {
+                alert('Configuration updated successfully!');
+            }
+        };
+    </script>
+</body>
+
+</html>

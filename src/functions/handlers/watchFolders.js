@@ -3,12 +3,10 @@ const path = require('path');
 const chokidar = require('chokidar');
 const chalk = require('chalk');
 
-// Define paths
 const commandsPath = path.join(__dirname, '../../commands');
 const eventsPath = path.join(__dirname, '../../events');
 const prefixPath = path.join(__dirname, '../../messages');
 
-// Command, Prefix, and Event templates
 const commandTemplate = `
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
@@ -27,12 +25,9 @@ const prefixTemplate = `
 
 module.exports = {
     name: 'command-name',
-
     description: 'command-description.',
-
     //* Optional: Aliases are alternative names for the command. Example: !p will also trigger the ping command.
     aliases: ['alaises_1', 'aliases_2'],
-
     // The run function is the main logic that gets executed when the command is called.
     run: async (client, message, args) => {
         // Command execution logic goes here
@@ -49,7 +44,6 @@ module.exports = {
 };
 `;
 
-// File watchers
 const commandWatcher = chokidar.watch(commandsPath, {
     ignored: /(^|[\/\\])\../,
     persistent: true,
@@ -68,7 +62,6 @@ const prefixWatcher = chokidar.watch(prefixPath, {
     ignoreInitial: true,
 });
 
-// Function for colorful console logs
 const logWithStyle = (message, type = 'info') => {
     switch (type) {
         case 'success':
@@ -88,13 +81,11 @@ const logWithStyle = (message, type = 'info') => {
     }
 };
 
-// Function to get relative path from src folder
 const getRelativePath = (filePath) => {
-    const srcPath = path.join(__dirname, '../../'); // path up to src
+    const srcPath = path.join(__dirname, '../../');
     return path.relative(srcPath, filePath);
 };
 
-// Watch for new command files
 commandWatcher.on('add', (filePath) => {
     const ext = path.extname(filePath);
 
@@ -112,7 +103,6 @@ commandWatcher.on('add', (filePath) => {
     }
 });
 
-// Watch for new prefix files
 prefixWatcher.on('add', (filePath) => {
     const ext = path.extname(filePath);
 
@@ -130,7 +120,6 @@ prefixWatcher.on('add', (filePath) => {
     }
 });
 
-// Watch for new event files
 eventWatcher.on('add', (filePath) => {
     const ext = path.extname(filePath);
     const eventName = path.basename(filePath, ext);
@@ -149,10 +138,8 @@ eventWatcher.on('add', (filePath) => {
     }
 });
 
-// Error logging for watchers
 commandWatcher.on('error', (error) => logWithStyle(`Command watcher error: ${error}`, 'error'));
 eventWatcher.on('error', (error) => logWithStyle(`Event watcher error: ${error}`, 'error'));
 prefixWatcher.on('error', (error) => logWithStyle(`Prefix watcher error: ${error}`, 'error'));
 
-// Start message
-logWithStyle('Watching for new files in commands and events folders...', 'info');
+logWithStyle('[Info] Watching for new files.', 'info');

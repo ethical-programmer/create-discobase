@@ -17,12 +17,15 @@
 ✨ Supports Latest Discord.js v14.
 ```
 
-
-## 🎉 New Update (v1.0.10) 🎉
+## 🎉 New Update (v2.0.0) 🎉
 - 🚀 Enhanced Terminal Look: Experience a cleaner and more modern terminal display with colorful logs for success, errors, and info messages.
 - 📝 Auto-Generated Files: Commands, events, and prefix commands now come with pre-built templates to save you time.
 - ⚡ Optimized File Watching: Automatic detection and template insertion for new command, event, and prefix files.
-
+- 🔍 **Error Logging:** Errors encountered during runtime are automatically logged into an `errors` folder for easier debugging.
+- 📊 **Discobase Dashboard:** A comprehensive dashboard running on localhost allows you to:
+  - View statistics such as bot guilds, command counts, and user counts.
+  - Monitor recent activities (e.g., command creation, deletion, and changes).
+  - Manage bot settings like banner, avatar, and name directly from the dashboard.
 
 
 ## Features
@@ -38,6 +41,8 @@
 - 🔤 Prefix Commands Support
 - ➗ Slash Commands Support
 - 🔔 Automatic Detection of Missing Intents
+- 🗂️ **Error Logging:** Automatic logging of runtime errors into an `errors` folder.
+- 📊 **Discobase Dashboard:** View and manage your bot's statistics and settings easily.
 
 
 ## Installation
@@ -46,13 +51,13 @@ To create a new **discoBase** project, run the following commands:
 
 
 ```bash
-npx create-discobase my-project
+npx create-discobase@latest my-project
 ```
 
 You can also create a new project in the current directory without specifying a project name:
 
 ```bash
-npx create-discobase
+npx create-discobase@latest
 ```
 This will generate a new **discoBase** project in the current directory.
 
@@ -90,10 +95,6 @@ To run this project, you will need to provide the necessary values in the config
 | `userPermissions`   | `array`     | **Optional**. List of permissions the user needs to execute the command (e.g., `'Administrator'`, `'KickMembers'`). |
 | `cooldown`          | `number`    | **Optional**. The cooldown time in seconds before the command can be reused. Default is 3 seconds.    |
 
-
-## Authors
-
-- [@ethical_dev](https://discord.com/users/740117727322046538)
 
 
 ## Contributing

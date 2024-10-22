@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiscoBase - Guilds</title>
+    <link rel="shortcut icon" href="https://i.ibb.co/1QRfxtD/Untitled-design.png" type="image/x-icon">
+    <link rel="stylesheet" href="guilds.css">
+</head>
+
+<body>
+    <div class="navbar">
+        <h1 class="logo">DiscoBase</h1>
+        <nav>
+            <ul>
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/config" class="nav-link">Manage Configuration</a></li>
+                <li><a href="/commands" class="nav-link">Commands</a></li>
+                <li><a href="/errors" class="nav-link">Error</a></li>
+                <li><a href="/guilds" class="nav-link">Guilds</a></li>
+                <li><a href="/bot" class="nav-link">Bot</a></li>
+
+            </ul>
+        </nav>
+    </div>
+
+    <div class="container">
+        <h1 class="title">Guilds</h1>
+
+        <div class="guilds-grid" id="guilds-container">
+            <!-- Guild cards will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        
+
+        async function fetchGuilds() {
+            try {
+                // Replace this URL with your actual API endpoint
+                const response = await fetch('/api/guilds');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const guilds = await response.json();
+                return guilds;
+            } catch (error) {
+                console.error('Error fetching guilds:', error);
+                return []; // Return an empty array on error
+            }
+        }
+
+        function createGuildCard(guild) {
+            return `
+            <div class="guild-card">
+                <div class="guild-header">
+                    <img src="${guild.icon}" alt="${guild.name}" class="guild-icon">
+                    <h3 class="guild-name">${guild.name}</h3>
+                </div>
+                <div class="guild-members">${guild.memberCount} members</div>
+            </div>
+        `;
+        }
+
+        window.onload = async function () {
+            const guildsContainer = document.getElementById('guilds-container');
+            const guilds = await fetchGuilds(); // Fetch the guilds dynamically
+            guilds.forEach(guild => {
+                guildsContainer.innerHTML += createGuildCard(guild);
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -6,6 +6,23 @@ const { prefixHandler } = require('../../functions/handlers/prefixHandler');
 const { handleCommands } = require('../../functions/handlers/handleCommands');
 const path = require('path');
 const mongodbURL = config.database.mongodbUrl;
+const fs = require('fs')
+
+const errorsDir = path.join(__dirname, '../../../errors'); 
+function ensureErrorDirectoryExists() {
+    if (!fs.existsSync(errorsDir)) {
+        fs.mkdirSync(errorsDir);
+    }
+}
+
+function logErrorToFile(errorMessage) {
+    ensureErrorDirectoryExists();
+    
+    const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
+    const filePath = path.join(errorsDir, fileName);
+
+    fs.writeFileSync(filePath, errorMessage, 'utf8');
+}
 
 module.exports = {
     name: 'ready',
@@ -24,6 +41,8 @@ module.exports = {
             } catch (error) {
                 console.log(chalk.red.bold('ERROR: ') + 'Failed to connect to MongoDB. Please check your MongoDB URL and connection.');
                 console.error(error);
+                logErrorToFile(error);
+                
             }
         }
 

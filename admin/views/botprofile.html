@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="botprofile.css">
+    <title>DiscoBase - Bot Information</title>
+   
+</head>
+
+<body>
+    <div class="navbar">
+        <h1 class="logo">DiscoBase</h1>
+        <nav>
+            <ul>
+                <li><a href="/" class="nav-link">Home</a></li>
+                <li><a href="/config" class="nav-link">Manage Configuration</a></li>
+                <li><a href="/commands" class="nav-link">Commands</a></li>
+                <li><a href="/errors" class="nav-link">Errors</a></li>
+                <li><a href="/guilds" class="nav-link">Guilds</a></li>
+
+                <li><a href="/bot" class="nav-link">Bot</a></li>
+
+            </ul>
+        </nav>
+    </div>
+
+    <div class="container">
+        <h1 class="title">Bot Information</h1>
+
+        <div class="bot-info">
+            <div class="bot-header">
+                <img src="" alt="Bot Avatar" class="bot-avatar" id="bot-avatar">
+                <div class="bot-name-status">
+                    <h2 class="bot-name" id="bot-name">DiscoBot</h2>
+                    <span class="bot-status status-online" id="bot-status">Online</span>
+                </div>
+            </div>
+            <img src="https://i.ibb.co/kGVsBgN/botbanner.png" alt="Bot Banner" class="bot-banner" id="bot-banner">
+            <div class="bot-details">
+                <div class="bot-detail">
+                    <h3>Bot ID</h3>
+                    <p id="bot-id">123456789</p>
+                </div>
+                <div class="bot-detail">
+                    <h3>isVerified</h3>
+                    <p id="bot-verify">Loading..</p>
+                </div>
+            </div>
+
+            <div class="bot-actions">
+                <h3>Update Bot Information</h3>
+                <form id="update-bot-form" method="POST" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="new-bot-name">New Bot Name</label>
+                        <input type="text" id="new-bot-name" name="newBotName" placeholder="Enter new bot name">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-bot-avatar">New Bot Avatar</label>
+                        <input type="file" id="new-bot-avatar" name="new-bot-avatar" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-bot-banner">New Bot Banner</label>
+                        <input type="file" id="new-bot-banner" name="new-bot-banner" accept="image/*">
+                    </div>
+                    <button type="submit">Update Bot</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fetch bot information
+        window.onload = function () {
+
+
+            fetch('/api/bot-info')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('bot-name').textContent = data.botName;
+                    document.getElementById('bot-status').textContent = data.botStatus;
+                    document.getElementById('bot-status').className = `bot-status status-${data.botStatus.toLowerCase()}`;
+                    document.getElementById('bot-id').textContent = data.botId;
+                    document.getElementById('bot-verify').textContent = data.isVerified;
+                    if (data.botAvatar) {
+                        document.getElementById('bot-avatar').src = data.botAvatar;
+                    }
+                    if (data.botBanner) {
+                        document.getElementById('bot-banner').src = data.botBanner;
+                    }
+                })
+                .catch(error => console.error('Error fetching bot info:', error));
+
+        }
+
+        // Handle form submission
+        document.getElementById('update-bot-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('/api/update-bot', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Bot information updated successfully!');
+                        // Refresh the page or update the displayed information
+                        location.reload();
+                    } else {
+                        alert('Failed to update bot information. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating bot info:', error);
+                    alert('An error occurred while updating bot information.');
+                });
+        });
+    </script>
+</body>
+
+</html>
