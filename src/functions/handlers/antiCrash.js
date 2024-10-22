@@ -2,9 +2,27 @@ const axios = require('axios');
 const config = require('../../../config.json');
 const chalk = require('chalk');
 const process = require('node:process');
+const fs = require('fs');
+const path = require('path');
 
 function antiCrash() {
     const webhookURL = config.logging.errorLogs;
+    const errorsDir = path.join(__dirname, '../../../errors'); 
+
+    function ensureErrorDirectoryExists() {
+        if (!fs.existsSync(errorsDir)) {
+            fs.mkdirSync(errorsDir);
+        }
+    }
+
+    function logErrorToFile(errorMessage) {
+        ensureErrorDirectoryExists();
+        
+        const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
+        const filePath = path.join(errorsDir, fileName);
+
+        fs.writeFileSync(filePath, errorMessage, 'utf8');
+    }
 
     async function sendErrorNotification(message) {
         if (!webhookURL || webhookURL === "YOUR_DISCORD_WEBHOOK_URL") {
@@ -34,14 +52,21 @@ function antiCrash() {
             : `Unhandled Rejection at: ${promise} \nReason: ${reason} \nStack: ${reason.stack || 'No stack trace available.'}`;
 
         console.error(chalk.red.bold('ERROR:') + ' ' + errorMessage);
+
+        logErrorToFile(errorMessage);
+
         await sendErrorNotification(errorMessage);
     });
+
     process.on('uncaughtException', async (error) => {
         const errorMessage = error.message.includes("Used disallowed intents")
             ? 'Used disallowed intents. Please check your bot settings on the Discord developer portal.'
             : `Uncaught Exception: ${error.message} \nStack: ${error.stack || 'No stack trace available.'}`;
 
         console.error(chalk.red.bold('ERROR:') + ' ' + errorMessage);
+
+        logErrorToFile(errorMessage);
+
         await sendErrorNotification(errorMessage);
     });
 }

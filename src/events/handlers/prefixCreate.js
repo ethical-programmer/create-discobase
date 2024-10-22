@@ -2,21 +2,35 @@ const chalk = require("chalk");
 const config = require('../../../config.json');
 const { EmbedBuilder } = require('discord.js');
 const { getSimilarCommands } = require('../../functions/handlers/similarity');
+const path = require('path')
+
+const errorsDir = path.join(__dirname, '../../../errors');
+
+function ensureErrorDirectoryExists() {
+    if (!fs.existsSync(errorsDir)) {
+        fs.mkdirSync(errorsDir);
+    }
+}
+
+function logErrorToFile(errorMessage) {
+    ensureErrorDirectoryExists();
+    
+    const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
+    const filePath = path.join(errorsDir, fileName);
+    fs.writeFileSync(filePath, errorMessage, 'utf8');
+}
 
 module.exports = {
     name: 'messageCreate',
     async execute(message, client) {
-        // 1. Initial Checks
         const prefix = config.prefix.value;
         const content = message.content.toLowerCase();
-
+        if (prefix === '') return;
         if (!content.startsWith(prefix) || message.author.bot) return;
 
-        // 2. Command Extraction
         const args = content.slice(prefix.length).trim().split(/ +/);
         const commandName = args.shift().toLowerCase();
         
-        // 3. Command Lookup
         let command = client.prefix.get(commandName);
         if (!command) {
             command = Array.from(client.prefix.values()).find(
@@ -24,20 +38,17 @@ module.exports = {
             );
         }
 
-        // Handle unknown command
         if (!command) {
             console.log(chalk.yellow.bold('WARNING: ') + `Unknown command: "${commandName}"`);
 
-            // Get similar commands
             const similarCommands = getSimilarCommands(commandName, Array.from(client.prefix.values()));
             if (similarCommands.length > 0) {
                 return await message.reply(`Command not found. Did you mean: ${similarCommands.join(', ')}?`);
             } else {
-                return await message.reply(`Command '${commandName}' doesn't exist.`);
+                return;
             }
         }
 
-        // 4. Cooldown Handling
         if (!client.cooldowns) {
             client.cooldowns = new Map();
         }
@@ -51,7 +62,6 @@ module.exports = {
 
         const timestamps = client.cooldowns.get(command.name);
 
-        // Check if user is on cooldown
         if (timestamps.has(message.author.id)) {
             const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
             if (now < expirationTime) {
@@ -62,10 +72,8 @@ module.exports = {
             }
         }
 
-        // Set the timestamp for the user
         timestamps.set(message.author.id, now);
 
-        // 5. Permission Checks
         if (command.adminOnly && !config.bot.admins.includes(message.author.id)) {
             return message.reply({
                 content: `This command is admin-only. You cannot run this command.`,
@@ -98,10 +106,8 @@ module.exports = {
             }
         }
 
-        // 6. Command Execution
         try {
             await command.run(client, message, args);
-            // Create an embed to log the command execution
             const logEmbed = new EmbedBuilder()
                 .setColor('Blue')
                 .setTitle('Command Executed')
@@ -113,7 +119,6 @@ module.exports = {
                 )
                 .setTimestamp();
 
-            // Send the embed to the specified logs channel
             if (config.logging.commandLogsChannelId) {
                 const logsChannel = client.channels.cache.get(config.logging.commandLogsChannelId);
                 if (logsChannel) {
@@ -128,6 +133,8 @@ module.exports = {
             message.reply({
                 content: 'There was an error while executing this command!',
             });
+            logErrorToFile(error)
+
         }
     }
 };

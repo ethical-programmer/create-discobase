@@ -2,27 +2,27 @@
 
 const fs = require('fs');
 const path = require('path');
-const inquirer = require('inquirer');
 const { exec } = require('child_process');
+const { intro, outro, confirm, select, text, isCancel, spinner } = require('@clack/prompts');
+const chalk = require('chalk');
 
 function installPackages(packages) {
     return new Promise((resolve, reject) => {
         const command = `npm install ${packages.join(' ')}`;
         exec(command, (error, stdout, stderr) => {
             if (error) {
-                console.error(`Error installing packages: ${stderr}`);
+                console.error(chalk.red(`Error installing packages: ${stderr}`));
                 reject(error);
             } else {
-                console.log(`Packages installed: ${stdout}`);
+                console.log(chalk.green(`Packages installed: ${stdout}`));
                 resolve();
             }
         });
     });
 }
 
-const excludeFiles = ['setup.js', 'package.json', 'package-lock.json', '.gitignore'];
+const excludeFiles = ['setup.js', 'package.json', 'package-lock.json', '.gitignore', 'README.md'];
 function copyProjectStructure(source, destination) {
-    // Create the destination directory if it doesn't exist
     if (!fs.existsSync(destination)) {
         fs.mkdirSync(destination, { recursive: true });
     }
@@ -40,69 +40,29 @@ function copyProjectStructure(source, destination) {
         const srcPath = path.join(source, item);
         const destPath = path.join(destination, item);
 
-        // Skip the excluded files
         if (excludeFiles.includes(item)) {
             return;
         }
 
-        // Check if the item is a directory
         if (fs.lstatSync(srcPath).isDirectory()) {
-            // Check for commands and messages directories to create Moderation and Other folders
             if (destination.endsWith('commands') || destination.endsWith('messages')) {
                 const moderationPath = path.join(destination, 'Moderation');
                 const otherPath = path.join(destination, 'Other');
-                const devPath = path.join(destination, 'dev');
 
-                // Create Moderation folder
-                if (!fs.existsSync(moderationPath)) {
-                    fs.mkdirSync(moderationPath);
-                }
-
-                // Create Other folder
-                if (!fs.existsSync(otherPath)) {
-                    fs.mkdirSync(otherPath);
-                }
-
-                // Create dev folder
-                if (!fs.existsSync(devPath)) {
-                    fs.mkdirSync(devPath);
-                }
+                if (!fs.existsSync(moderationPath)) fs.mkdirSync(moderationPath);
+                if (!fs.existsSync(otherPath)) fs.mkdirSync(otherPath);
             }
 
             if (destination.endsWith('events')) {
                 const buttonEventPath = path.join(destination, 'buttons');
-                const modelsEventPath = path.join(destination, 'models');
-                const otherEventPath = path.join(destination, 'other');
-                const menusEventPath = path.join(destination, 'menus');
 
-                if (!fs.existsSync(buttonEventPath)) {
-                    fs.mkdirSync(buttonEventPath);
-                }
-
-                if (!fs.existsSync(modelsEventPath)) {
-                    fs.mkdirSync(modelsEventPath);
-                }
-
-                if (!fs.existsSync(otherEventPath)) {
-                    fs.mkdirSync(otherEventPath);
-                }
-
-                if (!fs.existsSync(menusEventPath)) {
-                    fs.mkdirSync(menusEventPath);
-                }
-
+                if (!fs.existsSync(buttonEventPath)) fs.mkdirSync(buttonEventPath);
             }
 
             if (destination.endsWith('functions')) {
                 const otherFunctionsPath = path.join(destination, 'other');
-
-                if (!fs.existsSync(otherFunctionsPath)) {
-                    fs.mkdirSync(otherFunctionsPath);
-                }
-          
-
+                if (!fs.existsSync(otherFunctionsPath)) fs.mkdirSync(otherFunctionsPath);
             }
-
 
             copyProjectStructure(srcPath, destPath);
         } else {
@@ -111,7 +71,6 @@ function copyProjectStructure(source, destination) {
     });
 }
 
-// Function to create package.json file
 function createPackageJson(destination) {
     const packageJson = {
         name: path.basename(destination),
@@ -121,68 +80,49 @@ function createPackageJson(destination) {
     fs.writeFileSync(path.join(destination, 'package.json'), JSON.stringify(packageJson, null, 2));
 }
 
-
-
 async function setupProjectStructure() {
-    const args = process.argv.slice(2);
-    let projectName = args[0] || '';
-    let installDiscord, installMongo, installDependencies;
+    intro(chalk.yellowBright('Welcome to Discobase Setup!'));
 
-    if (!projectName) {
-        const answers = await inquirer.prompt([
-            {
-                type: 'input',
-                name: 'projectName',
-                message: 'Enter your bot name (leave blank to create in the current directory):',
-            },
-            {
-                type: 'confirm',
-                name: 'installDependencies',
-                message: 'Do you want to install required dependencies for Discobase? [Recommended]',
-                default: true
-            },
-            {
-                type: 'confirm',
-                name: 'installDiscord',
-                message: 'Do you want to install discord.js [Recommended]?',
-                default: true
-            },
-            {
-                type: 'confirm',
-                name: 'installMongo',
-                message: 'Do you want to install MongoDB and Mongoose?',
-                default: true
-            }
-        ]);
-        projectName = answers.projectName;
-        installDiscord = answers.installDiscord;
-        installMongo = answers.installMongo;
-        installDependencies = answers.installDependencies;
-    } else {
-        const confirmAnswers = await inquirer.prompt([
-            {
-                type: 'confirm',
-                name: 'installDependencies',
-                message: 'Do you want to install required dependencies for Discobase? [Recommended]',
-                default: true
-            },
-            {
-                type: 'confirm',
-                name: 'installDiscord',
-                message: 'Do you want to install discord.js [Recommended]?',
-                default: true
-            },
-            {
-                type: 'confirm',
-                name: 'installMongo',
-                message: 'Do you want to install MongoDB and Mongoose?',
-                default: true
-            }
-        ]);
+    let projectName = await text({
+        message: 'Enter your bot name (leave blank to create in the current directory):',
+        validate(value) {
+            return value.length > 100 ? 'Name too long' : undefined;
+        }
+    });
 
-        installDiscord = confirmAnswers.installDiscord;
-        installMongo = confirmAnswers.installMongo;
-        installDependencies = confirmAnswers.installDependencies;
+    if (isCancel(projectName)) {
+        outro(chalk.red('Setup cancelled.'));
+        return;
+    }
+
+    const installDependencies = await confirm({
+        message: 'Do you want to install required dependencies for Discobase? [Recommended]',
+        initialValue: true
+    });
+
+    if (isCancel(installDependencies)) {
+        outro(chalk.red('Setup cancelled.'));
+        return;
+    }
+
+    const installDiscord = await confirm({
+        message: 'Do you want to install discord.js [Recommended]?',
+        initialValue: true
+    });
+
+    if (isCancel(installDiscord)) {
+        outro(chalk.red('Setup cancelled.'));
+        return;
+    }
+
+    const installMongo = await confirm({
+        message: 'Do you want to install MongoDB and Mongoose?',
+        initialValue: true
+    });
+
+    if (isCancel(installMongo)) {
+        outro(chalk.red('Setup cancelled.'));
+        return;
     }
 
     const sourcePath = __dirname;
@@ -192,26 +132,28 @@ async function setupProjectStructure() {
         fs.mkdirSync(destinationPath);
     }
 
+    const s = spinner();
+    s.start(chalk.yellowBright('Copying project structure...'));
     copyProjectStructure(sourcePath, destinationPath);
-    createPackageJson(destinationPath); 
-
-
-    console.log('Discobase is installed Successfully.');
+    createPackageJson(destinationPath);
+    s.stop(chalk.green('Project structure copied successfully.'));
 
     const packagesToInstall = [];
     if (installDiscord) packagesToInstall.push('discord.js');
     if (installMongo) packagesToInstall.push('mongoose');
-    if (installDependencies) packagesToInstall.push('chalk@4', 'chokidar', 'axios');
+    if (installDependencies) packagesToInstall.push('chalk@4', 'chokidar', 'axios', '@clack/prompts', 'multer', 'express');
 
     if (packagesToInstall.length > 0) {
-        console.log(`Installing packages...`);
+        console.log(chalk.yellow('Installing packages...'));
         try {
             await installPackages(packagesToInstall);
-            console.log('Packages installed successfully.');
+            console.log(chalk.green('Packages installed successfully.'));
         } catch (err) {
-            console.error(err);
+            console.error(chalk.red(err));
         }
     }
+
+    outro(chalk.green('Discobase is installed successfully! Enjoy coding.'));
 }
 
 setupProjectStructure();

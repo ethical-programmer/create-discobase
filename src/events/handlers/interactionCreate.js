@@ -1,6 +1,28 @@
 const { Interaction, Permissions, EmbedBuilder } = require("discord.js");
 const chalk = require("chalk");
 const config = require('../../../config.json');
+const path = require('path');
+
+const errorsDir = path.join(__dirname, '../../../errors'); // Ensure correct path to the root
+
+// Function to create the errors directory if it doesn't exist
+function ensureErrorDirectoryExists() {
+    if (!fs.existsSync(errorsDir)) {
+        fs.mkdirSync(errorsDir);
+    }
+}
+
+// Function to log errors to a file
+function logErrorToFile(errorMessage) {
+    ensureErrorDirectoryExists();
+    
+    // Create a unique filename based on the timestamp
+    const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
+    const filePath = path.join(errorsDir, fileName);
+
+    // Save the error message to the file
+    fs.writeFileSync(filePath, errorMessage, 'utf8');
+}
 
 module.exports = {
     name: 'interactionCreate',
@@ -107,6 +129,8 @@ module.exports = {
                 content: 'There was an error while executing this command!',
                 ephemeral: true
             });
+            logErrorToFile(error)
+
         }
     },
 };

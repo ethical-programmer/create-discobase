@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js'); // Make sure to import EmbedBuilder
+const { EmbedBuilder } = require('discord.js'); 
 const config = require('../../../config.json');
 
 module.exports = {

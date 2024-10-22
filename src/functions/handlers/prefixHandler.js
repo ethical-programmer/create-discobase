@@ -6,7 +6,6 @@ const path = require('path');
 const chokidar = require('chokidar');
 const chalk = require('chalk');
 
-// Debounce function to avoid rapid calls
 const debounce = (func, delay) => {
     let timeoutId;
     return (...args) => {
@@ -17,10 +16,26 @@ const debounce = (func, delay) => {
     };
 };
 
+const errorsDir = path.join(__dirname, '../../../errors'); 
+
+function ensureErrorDirectoryExists() {
+    if (!fs.existsSync(errorsDir)) {
+        fs.mkdirSync(errorsDir);
+    }
+}
+
+function logErrorToFile(errorMessage) {
+    ensureErrorDirectoryExists();
+    
+    const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
+    const filePath = path.join(errorsDir, fileName);
+
+    fs.writeFileSync(filePath, errorMessage, 'utf8');
+}
+
 function prefixHandler(client, prefixPath) {
     client.prefix = new Collection();
 
-    // Logging function with color-coded messages
     const log = (message, type = 'INFO') => {
         const colors = {
             INFO: chalk.blue.bold('INFO:'),
@@ -31,7 +46,6 @@ function prefixHandler(client, prefixPath) {
         console.log(colors[type] + ' ' + message);
     };
 
-    // Load a command from a given file path
     const loadCommand = (filePath) => {
         try {
             delete require.cache[require.resolve(filePath)];
@@ -46,10 +60,10 @@ function prefixHandler(client, prefixPath) {
         } catch (error) {
             log(`Failed to load prefix command in ${chalk.red(path.basename(filePath))}`, 'ERROR');
             console.error(error);
+            logErrorToFile(error)
         }
     };
 
-    // Unload a command by file path
     const unloadCommand = (filePath) => {
         const commandName = path.basename(filePath, '.js');
         if (client.prefix.has(commandName)) {
@@ -60,7 +74,6 @@ function prefixHandler(client, prefixPath) {
         }
     };
 
-    // Load all commands from the specified directory
     const loadAllCommands = (commandDir) => {
         const commandFiles = fs.readdirSync(commandDir);
         commandFiles.forEach(file => {
@@ -68,43 +81,40 @@ function prefixHandler(client, prefixPath) {
             const stat = fs.statSync(filePath);
 
             if (stat.isDirectory()) {
-                loadAllCommands(filePath); // Recursively load commands in subdirectories
+                loadAllCommands(filePath);
             } else if (file.endsWith('.js')) {
-                loadCommand(filePath); // Load command files
+                loadCommand(filePath); 
             }
         });
     };
 
-    loadAllCommands(prefixPath); // Initial load of all commands
+    loadAllCommands(prefixPath);
 
-    // Watch for changes in the command directory
     const watcher = chokidar.watch(prefixPath, {
         persistent: true,
         ignoreInitial: true,
         awaitWriteFinish: true,
     });
 
-    // Debounced functions for loading and unloading commands
     const debouncedLoadCommand = debounce(loadCommand, 500);
     const debouncedUnloadCommand = debounce(unloadCommand, 500);
 
-    // Set up watchers for command file events
     watcher
         .on('add', (filePath) => {
-            if (filePath.endsWith('.js')) { // Ensure it's a .js file
+            if (filePath.endsWith('.js')) {
                 log(`New command file added: ${chalk.green(path.basename(filePath))}`, 'SUCCESS');
                 debouncedLoadCommand(filePath);
             }
         })
         .on('change', (filePath) => {
-            if (filePath.endsWith('.js')) { // Ensure it's a .js file
+            if (filePath.endsWith('.js')) { 
                 log(`Command file changed: ${chalk.blue(path.basename(filePath))}`, 'INFO');
                 debouncedUnloadCommand(filePath);
                 debouncedLoadCommand(filePath);
             }
         })
         .on('unlink', (filePath) => {
-            if (filePath.endsWith('.js')) { // Ensure it's a .js file
+            if (filePath.endsWith('.js')) {
                 log(`Command file removed: ${chalk.red(path.basename(filePath))}`, 'ERROR');
                 debouncedUnloadCommand(filePath);
             }

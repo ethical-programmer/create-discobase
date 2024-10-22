@@ -16,7 +16,23 @@ const debounce = (func, delay) => {
     };
 };
 
-// Shorten file paths for cleaner logs
+const errorsDir = path.join(__dirname, '../../../errors'); 
+
+function ensureErrorDirectoryExists() {
+    if (!fs.existsSync(errorsDir)) {
+        fs.mkdirSync(errorsDir);
+    }
+}
+
+function logErrorToFile(errorMessage) {
+    ensureErrorDirectoryExists();
+    
+    const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
+    const filePath = path.join(errorsDir, fileName);
+
+    fs.writeFileSync(filePath, errorMessage, 'utf8');
+}
+
 const getShortPath = (filePath) => path.basename(filePath);
 
 const eventsHandler = async (client, eventsPath) => {
@@ -60,6 +76,7 @@ const eventsHandler = async (client, eventsPath) => {
             }
         } catch (error) {
             console.error(chalk.red.bold('ERROR: ') + `Failed to load event from ${chalk.yellow(getShortPath(file))}:`, error);
+            logErrorToFile(error)
         }
     };
 
@@ -68,10 +85,10 @@ const eventsHandler = async (client, eventsPath) => {
             delete require.cache[require.resolve(file)];
             const schema = require(file);
 
-            // Handle schema loading logic here (if necessary)
             console.log(chalk.green.bold('SUCCESS: ') + `Loaded schema from ${chalk.yellow(getShortPath(file))}`);
         } catch (error) {
             console.error(chalk.red.bold('ERROR: ') + `Failed to load schema from ${chalk.yellow(getShortPath(file))}:`, error);
+            logErrorToFile(error)
         }
     };
 
@@ -99,17 +116,15 @@ const eventsHandler = async (client, eventsPath) => {
         schemaFiles.forEach(file => loadSchema(file));
     };
 
-    // Load events and schemas from the specified paths
     loadAllEvents(eventsPath);
     loadAllSchemas(path.join(__dirname, '../../schemas'));
 
-    // Watch for changes in events and schemas, but ignore functions
     const watcher = chokidar.watch([eventsPath, path.join(__dirname, '../../schemas')], {
         persistent: true,
         ignoreInitial: true,
         awaitWriteFinish: true,
         ignored: [
-            path.join(__dirname, '../../functions/**'), // Ignore all changes in the functions directory
+            path.join(__dirname, '../../functions/**'), 
         ],
     });
 
@@ -118,18 +133,17 @@ const eventsHandler = async (client, eventsPath) => {
             if (filePath.endsWith('.js')) {
                 console.log(chalk.blue.bold('WATCHER: ') + `New file added: ${chalk.yellow.bold(getShortPath(filePath))}`);
                 if (filePath.includes('schemas')) {
-                    loadSchema(filePath); // Load as schema
+                    loadSchema(filePath); 
                 } else {
-                    loadEvent(filePath); // Load as event
+                    loadEvent(filePath); 
                 }
             }
         })
         .on('change', (filePath) => {
             console.log(chalk.blue.bold('WATCHER: ') + `File changed: ${chalk.yellow.bold(getShortPath(filePath))}`);
             if (filePath.includes('schemas')) {
-                loadSchema(filePath); // Load as schema
+                loadSchema(filePath); 
             } else {
-                // Unload and reload event if it's not a schema
                 unloadEvent(filePath);
                 loadEvent(filePath);
             }
@@ -137,7 +151,6 @@ const eventsHandler = async (client, eventsPath) => {
         .on('unlink', (filePath) => {
             console.log(chalk.blue.bold('WATCHER: ') + `File removed: ${chalk.yellow.bold(getShortPath(filePath))}`);
             if (filePath.includes('schemas')) {
-                // Handle schema removal if necessary
             } else {
                 unloadEvent(filePath);
             }

@@ -5,8 +5,15 @@ const chalk = require('chalk');
 const config = require('../../../config.json');
 const path = require('path');
 const chokidar = require('chokidar');
+const activities = [];
+const addActivity = (action, filePath) => {
+    const timestamp = new Date().toISOString();
+    activities.push({ action, filePath, timestamp });
+};
 
-// Logging function with colored output
+const getActivities = () => activities;
+
+
 const log = (message, type = 'INFO') => {
     const colors = {
         INFO: chalk.blue.bold('INFO:'),
@@ -17,17 +24,31 @@ const log = (message, type = 'INFO') => {
     console.log(colors[type] + ' ' + message);
 };
 
-// Formats file path for better logging
+const errorsDir = path.join(__dirname, '../../../errors'); 
+
+function ensureErrorDirectoryExists() {
+    if (!fs.existsSync(errorsDir)) {
+        fs.mkdirSync(errorsDir);
+    }
+}
+
+function logErrorToFile(errorMessage) {
+    ensureErrorDirectoryExists();
+    
+    const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
+    const filePath = path.join(errorsDir, fileName);
+
+    fs.writeFileSync(filePath, errorMessage, 'utf8');
+}
+
 const formatFilePath = (filePath) => {
     return path.relative(process.cwd(), filePath);
 };
 
-// Checks for incomplete configuration
 const isConfigIncomplete = (key, value, placeholderTokens) => {
     return !value || placeholderTokens.includes(value);
 };
 
-// Recursively get all command files
 const getAllCommandFiles = (dirPath, arrayOfFiles = []) => {
     const files = fs.readdirSync(dirPath);
     files.forEach(file => {
@@ -41,13 +62,11 @@ const getAllCommandFiles = (dirPath, arrayOfFiles = []) => {
     return arrayOfFiles;
 };
 
-// Load a single command file
 const loadCommand = (client, filePath) => {
     try {
-        // Ignore loading files in the schemas directory
         if (filePath.includes('schemas')) {
             log(`Ignoring schema file: ${formatFilePath(filePath)}`, 'WARNING');
-            return null; // Skip loading this file as a command
+            return null; 
         }
 
         delete require.cache[require.resolve(filePath)];
@@ -64,11 +83,11 @@ const loadCommand = (client, filePath) => {
     } catch (error) {
         log(`Failed to load command from "${formatFilePath(filePath)}".`, 'ERROR');
         console.error(error);
+        logErrorToFile(error)
         return null;
     }
 };
 
-// Load all commands from the specified path
 const loadCommands = (client, commandsPath) => {
     const globalCommandArray = [];
     const devCommandArray = [];
@@ -89,7 +108,6 @@ const loadCommands = (client, commandsPath) => {
     return { globalCommandArray, devCommandArray };
 };
 
-// Unregister a command by name
 const unregisterCommand = async (commandName, rest, config, devCommandArray) => {
     try {
         log(`Unregistering global command: ${commandName}`, 'INFO');
@@ -117,10 +135,10 @@ const unregisterCommand = async (commandName, rest, config, devCommandArray) => 
     } catch (error) {
         log(`Failed to unregister command: ${commandName}`, 'ERROR');
         console.error(error);
+        logErrorToFile(error)
     }
 };
 
-// Register global and developer commands
 const registerCommands = async (globalCommandArray, devCommandArray, rest, config) => {
     if (globalCommandArray.length > 0) {
         try {
@@ -134,8 +152,10 @@ const registerCommands = async (globalCommandArray, devCommandArray, rest, confi
             log('Failed to reload global application (/) commands.', 'ERROR');
             if (error.code === 10002) {
                 console.error(chalk.red.bold('ERROR: ') + 'Unknown Application. Please check the Discord bot ID provided in your configuration.');
+                logErrorToFile(error)
             } else {
                 console.error(chalk.red.bold('ERROR: ') + 'Failed to register commands:', error.message);
+                logErrorToFile(error)
             }
         }
     }
@@ -152,6 +172,7 @@ const registerCommands = async (globalCommandArray, devCommandArray, rest, confi
             } catch (error) {
                 log(`Failed to reload developer guild (/) commands for server: ${serverId}`, 'ERROR');
                 console.error(error);
+                logErrorToFile(error)
             }
         });
 
@@ -161,7 +182,6 @@ const registerCommands = async (globalCommandArray, devCommandArray, rest, confi
     }
 };
 
-// Handle command loading and watching for changes
 const handleCommands = async (client, commandsPath) => {
     const placeholderTokens = [
         "YOUR_BOT_TOKEN",
@@ -194,8 +214,6 @@ const handleCommands = async (client, commandsPath) => {
     const rest = new REST({ version: '10' }).setToken(config.bot.token);
     const { globalCommandArray, devCommandArray } = loadCommands(client, commandsPath);
     await registerCommands(globalCommandArray, devCommandArray, rest, config);
-
-    // Setup file watching for commands and schemas
     const watcher = chokidar.watch([commandsPath, './src/functions', './src/schemas'], {
         persistent: true,
         ignoreInitial: true,
@@ -204,20 +222,16 @@ const handleCommands = async (client, commandsPath) => {
 
     let timeout;
 
-    // Function to register commands with debounce
     const registerDebouncedCommands = async () => {
         const { globalCommandArray, devCommandArray } = loadCommands(client, commandsPath);
         await registerCommands(globalCommandArray, devCommandArray, rest, config);
     };
 
-    // Watch for changes in command files
-    // Watch for changes in command files
     watcher
         .on('add', (filePath) => {
-            // Ignore if the file is in the schemas folder
             if (filePath.includes('schemas')) {
                 log(`Schema file added: ${formatFilePath(filePath)}`, 'WARNING');
-                return; // Skip adding it as a command
+                return; 
             }
 
             if (filePath.includes('functions')) {
@@ -227,14 +241,14 @@ const handleCommands = async (client, commandsPath) => {
 
             log(`New command file added: ${formatFilePath(filePath)}`, 'SUCCESS');
             loadCommand(client, filePath);
+            addActivity('added', filePath);
             clearTimeout(timeout);
             timeout = setTimeout(registerDebouncedCommands, 5000);
         })
         .on('change', (filePath) => {
-            // Ignore if the file is in the schemas folder
             if (filePath.includes('schemas')) {
                 log(`Schema file changed: ${formatFilePath(filePath)}`, 'WARNING');
-                return; // Skip loading it as a command
+                return;
             }
             if (filePath.includes('functions')) {
                 log(`Functions file changed: ${formatFilePath(filePath)}`, 'WARNING')
@@ -243,14 +257,14 @@ const handleCommands = async (client, commandsPath) => {
 
             log(`Command file changed: ${formatFilePath(filePath)}`, 'INFO');
             loadCommand(client, filePath);
+            addActivity('changed', filePath);
             clearTimeout(timeout);
             timeout = setTimeout(registerDebouncedCommands, 5000);
         })
         .on('unlink', async (filePath) => {
-            // Ignore if the file is in the schemas folder
             if (filePath.includes('schemas')) {
                 log(`Schema file removed: ${formatFilePath(filePath)}`, 'WARNING');
-                return; // Skip unregistering it as a command
+                return; 
             }
 
             if (filePath.includes('functions')) {
@@ -262,13 +276,14 @@ const handleCommands = async (client, commandsPath) => {
             log(`Command file removed: ${formatFilePath(filePath)}`, 'ERROR');
             client.commands.delete(commandName);
             await unregisterCommand(commandName, rest, config, devCommandArray);
+            addActivity('removed', filePath);
             clearTimeout(timeout);
             timeout = setTimeout(registerDebouncedCommands, 5000);
         });
 
 };
 
-// Export the handleCommands function for use in other modules
 module.exports = {
-    handleCommands
+    handleCommands,
+    getActivities 
 };
