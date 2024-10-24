@@ -2,7 +2,8 @@ const chalk = require("chalk");
 const config = require('../../../config.json');
 const { EmbedBuilder } = require('discord.js');
 const { getSimilarCommands } = require('../../functions/handlers/similarity');
-const path = require('path')
+const path = require('path');
+const fs = require('fs');
 
 const errorsDir = path.join(__dirname, '../../../errors');
 
@@ -12,13 +13,17 @@ function ensureErrorDirectoryExists() {
     }
 }
 
-function logErrorToFile(errorMessage) {
+function logErrorToFile(error) {
     ensureErrorDirectoryExists();
+
+    const errorMessage = `${error.name}: ${error.message}\n${error.stack}`;
     
     const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
     const filePath = path.join(errorsDir, fileName);
+    
     fs.writeFileSync(filePath, errorMessage, 'utf8');
 }
+
 
 module.exports = {
     name: 'messageCreate',

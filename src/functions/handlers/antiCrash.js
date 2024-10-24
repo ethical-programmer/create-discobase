@@ -15,14 +15,18 @@ function antiCrash() {
         }
     }
 
-    function logErrorToFile(errorMessage) {
+    function logErrorToFile(error) {
         ensureErrorDirectoryExists();
+    
+        // Convert the error object into a string, including the stack trace
+        const errorMessage = `${error.name}: ${error.message}\n${error.stack}`;
         
         const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
         const filePath = path.join(errorsDir, fileName);
-
+        
         fs.writeFileSync(filePath, errorMessage, 'utf8');
     }
+    
 
     async function sendErrorNotification(message) {
         if (!webhookURL || webhookURL === "YOUR_DISCORD_WEBHOOK_URL") {

@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
-const { intro, outro, confirm, select, text, isCancel, spinner } = require('@clack/prompts');
+const { intro, outro, confirm, text, isCancel, spinner } = require('@clack/prompts');
 const chalk = require('chalk');
 
 function installPackages(packages) {
@@ -22,7 +22,7 @@ function installPackages(packages) {
 }
 
 const excludeFiles = ['setup.js', 'package.json', 'package-lock.json', '.gitignore', 'README.md'];
-function copyProjectStructure(source, destination) {
+function copyProjectStructure(source, destination, includeDashboard) {
     if (!fs.existsSync(destination)) {
         fs.mkdirSync(destination, { recursive: true });
     }
@@ -41,6 +41,11 @@ function copyProjectStructure(source, destination) {
         const destPath = path.join(destination, item);
 
         if (excludeFiles.includes(item)) {
+            return;
+        }
+
+        // Skip the 'admin' folder if includeDashboard is false
+        if (!includeDashboard && item === 'admin') {
             return;
         }
 
@@ -64,7 +69,7 @@ function copyProjectStructure(source, destination) {
                 if (!fs.existsSync(otherFunctionsPath)) fs.mkdirSync(otherFunctionsPath);
             }
 
-            copyProjectStructure(srcPath, destPath);
+            copyProjectStructure(srcPath, destPath, includeDashboard);
         } else {
             fs.copyFileSync(srcPath, destPath);
         }
@@ -125,6 +130,16 @@ async function setupProjectStructure() {
         return;
     }
 
+    const includeDashboard = await confirm({
+        message: 'Do you want the Discobase Dashboard?',
+        initialValue: true
+    });
+
+    if (isCancel(includeDashboard)) {
+        outro(chalk.red('Setup cancelled.'));
+        return;
+    }
+
     const sourcePath = __dirname;
     const destinationPath = projectName ? path.join(process.cwd(), projectName) : process.cwd();
 
@@ -134,7 +149,7 @@ async function setupProjectStructure() {
 
     const s = spinner();
     s.start(chalk.yellowBright('Copying project structure...'));
-    copyProjectStructure(sourcePath, destinationPath);
+    copyProjectStructure(sourcePath, destinationPath, includeDashboard);
     createPackageJson(destinationPath);
     s.stop(chalk.green('Project structure copied successfully.'));
 
