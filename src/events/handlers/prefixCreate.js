@@ -54,6 +54,14 @@ module.exports = {
             }
         }
 
+
+        if (command.devOnly) {
+            if (!config.bot.developerCommandsServerIds.includes(message.guild.id)) {
+                return;
+            }
+        }
+
+
         if (!client.cooldowns) {
             client.cooldowns = new Map();
         }
@@ -84,6 +92,7 @@ module.exports = {
                 content: `This command is admin-only. You cannot run this command.`,
             });
         }
+
 
         if (command.ownerOnly && message.author.id !== config.bot.ownerId) {
             return await message.reply({
