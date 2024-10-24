@@ -67,4 +67,8 @@ function calculateSimilarity(str1, str2) {
     return 1 - matrix[len1][len2] / Math.max(len1, len2);
 }
 
+<<<<<<< HEAD
 module.exports = { getSimilarCommands };
+=======
+module.exports = { getSimilarCommands };
+>>>>>>> 0602b2062d2b531c4250b5aee2b437f46bb1fd33
