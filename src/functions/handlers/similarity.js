@@ -1,86 +1,70 @@
-const { GatewayIntentBits } = require('discord.js');
+function getSimilarCommands(commandName, commands) {
+    const similarityThreshold = 0.6;
+    const partialMatches = [];
+    const similarCommands = [];
 
-const REQUIRED_INTENTS = {
-    'guildCreate': GatewayIntentBits.Guilds,
-    'guildUpdate': GatewayIntentBits.Guilds,
-    'guildDelete': GatewayIntentBits.Guilds,
-    'channelCreate': GatewayIntentBits.Guilds,
-    'channelUpdate': GatewayIntentBits.Guilds,
-    'channelDelete': GatewayIntentBits.Guilds,
-    'channelPinsUpdate': GatewayIntentBits.Guilds,
-    'threadCreate': GatewayIntentBits.Guilds,
-    'threadUpdate': GatewayIntentBits.Guilds,
-    'threadDelete': GatewayIntentBits.Guilds,
-    'threadListSync': GatewayIntentBits.Guilds,
-    'threadMemberUpdate': GatewayIntentBits.Guilds,
-    'threadMembersUpdate': GatewayIntentBits.Guilds,
-    'stageInstanceCreate': GatewayIntentBits.Guilds,
-    'stageInstanceUpdate': GatewayIntentBits.Guilds,
-    'stageInstanceDelete': GatewayIntentBits.Guilds,
-    'guildMemberAdd': GatewayIntentBits.GuildMembers,
-    'guildMemberUpdate': GatewayIntentBits.GuildMembers,
-    'guildMemberRemove': GatewayIntentBits.GuildMembers,
-    'threadMembersUpdate': GatewayIntentBits.GuildMembers,
-    'guildAuditLogEntryCreate': GatewayIntentBits.GuildModeration,
-    'guildBanAdd': GatewayIntentBits.GuildModeration,
-    'guildBanRemove': GatewayIntentBits.GuildModeration,
-    'guildEmojisUpdate': GatewayIntentBits.GuildEmojisAndStickers,
-    'guildStickersUpdate': GatewayIntentBits.GuildEmojisAndStickers,
-    'guildIntegrationsUpdate': GatewayIntentBits.GuildIntegrations,
-    'integrationCreate': GatewayIntentBits.GuildIntegrations,
-    'integrationUpdate': GatewayIntentBits.GuildIntegrations,
-    'integrationDelete': GatewayIntentBits.GuildIntegrations,
-    'webhooksUpdate': GatewayIntentBits.GuildWebhooks,
-    'inviteCreate': GatewayIntentBits.GuildInvites,
-    'inviteDelete': GatewayIntentBits.GuildInvites,
-    'voiceStateUpdate': GatewayIntentBits.GuildVoiceStates,
-    'presenceUpdate': GatewayIntentBits.GuildPresences,
-    'messageCreate': GatewayIntentBits.GuildMessages | GatewayIntentBits.DirectMessages | GatewayIntentBits.MessageContent,
-    'messageUpdate': GatewayIntentBits.GuildMessages | GatewayIntentBits.DirectMessages,
-    'messageDelete': GatewayIntentBits.GuildMessages | GatewayIntentBits.DirectMessages,
-    'messageDeleteBulk': GatewayIntentBits.GuildMessages,
-    'messageReactionAdd': GatewayIntentBits.GuildMessageReactions,
-    'messageReactionRemove': GatewayIntentBits.GuildMessageReactions,
-    'messageReactionRemoveAll': GatewayIntentBits.GuildMessageReactions,
-    'messageReactionRemoveEmoji': GatewayIntentBits.GuildMessageReactions,
-    'typingStart': GatewayIntentBits.GuildMessageTyping,
-    'channelPinsUpdate': GatewayIntentBits.GuildMessages,
-    'guildScheduledEventCreate': GatewayIntentBits.GuildScheduledEvents,
-    'guildScheduledEventUpdate': GatewayIntentBits.GuildScheduledEvents,
-    'guildScheduledEventDelete': GatewayIntentBits.GuildScheduledEvents,
-    'guildScheduledEventUserAdd': GatewayIntentBits.GuildScheduledEvents,
-    'guildScheduledEventUserRemove': GatewayIntentBits.GuildScheduledEvents,
-    'autoModerationRuleCreate': GatewayIntentBits.AutoModerationConfiguration,
-    'autoModerationRuleUpdate': GatewayIntentBits.AutoModerationConfiguration,
-    'autoModerationRuleDelete': GatewayIntentBits.AutoModerationConfiguration,
-    'autoModerationActionExecution': GatewayIntentBits.AutoModerationExecution,
-};
+    for (const command of commands) {
+        const cmdName = command.name;
 
-function checkMissingIntents(client) {
-    const missingIntents = new Set();
+        if (cmdName.includes(commandName) || commandName.includes(cmdName)) {
+            partialMatches.push(cmdName);
+        }
 
-    const intents = Number(client.options.intents.bitfield);
+        const similarity = calculateSimilarity(commandName, cmdName);
+        if (similarity >= similarityThreshold) {
+            similarCommands.push({ name: cmdName, similarity });
+        }
 
-    for (const eventName of Object.keys(client._events)) {
-        const required = REQUIRED_INTENTS[eventName];
-        if (!required) continue; 
-        if ((intents & required) !== required) {
-            missingIntents.add(required);
+        if (command.aliases && command.aliases.length > 0) {
+            for (const alias of command.aliases) {
+                if (alias.includes(commandName) || commandName.includes(alias)) {
+                    partialMatches.push(alias);
+                }
+
+                const aliasSimilarity = calculateSimilarity(commandName, alias);
+                if (aliasSimilarity >= similarityThreshold) {
+                    similarCommands.push({ name: alias, similarity: aliasSimilarity });
+                }
+            }
         }
     }
 
-    if (missingIntents.size === 0) return;
+    const combinedCommands = new Set([...partialMatches, ...similarCommands.map(cmd => cmd.name)]);
+    const uniqueCommands = Array.from(combinedCommands);
 
-    const EventNames = Object.fromEntries(
-        Object.entries(REQUIRED_INTENTS).map(([eventName, intent]) => [intent, eventName])
-    );
+    similarCommands.sort((a, b) => b.similarity - a.similarity);
 
-    const missingIntentNames = [...missingIntents].map(intent => {
-        return EventNames[intent] || `Unknown Intent (${intent})`;
+    return uniqueCommands.sort((a, b) => {
+        const aIndex = similarCommands.findIndex(cmd => cmd.name === a);
+        const bIndex = similarCommands.findIndex(cmd => cmd.name === b);
+        return bIndex - aIndex;
     });
-
-    console.warn('Warning: Missing intents detected:', missingIntentNames);
 }
 
-module.exports = { checkMissingIntents };
+function calculateSimilarity(str1, str2) {
+    const len1 = str1.length;
+    const len2 = str2.length;
+    const matrix = [];
 
+    for (let i = 0; i <= len1; i++) {
+        matrix[i] = [i];
+    }
+    for (let j = 0; j <= len2; j++) {
+        matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= len1; i++) {
+        for (let j = 1; j <= len2; j++) {
+            const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+            matrix[i][j] = Math.min(
+                matrix[i - 1][j] + 1,
+                matrix[i][j - 1] + 1,
+                matrix[i - 1][j - 1] + cost
+            );
+        }
+    }
+
+    return 1 - matrix[len1][len2] / Math.max(len1, len2);
+}
+
+module.exports = { getSimilarCommands };
