@@ -80,11 +80,10 @@ function createPackageJson(destination) {
         name: path.basename(destination),
         main: "src/index.js",
         scripts: {
-            "start": "node ."
+            "start": "node .",
+            "generate": "node cli.js"
         },
-        bin: {
-            "discobase": "./bin/cli.js"
-        },
+
     };
 
     fs.writeFileSync(path.join(destination, 'package.json'), JSON.stringify(packageJson, null, 2));
@@ -163,7 +162,7 @@ async function setupProjectStructure() {
     const packagesToInstall = [];
     if (installDiscord) packagesToInstall.push('discord.js');
     if (installMongo) packagesToInstall.push('mongoose');
-    if (installDependencies) packagesToInstall.push('chalk@4', 'chokidar', 'axios', '@clack/prompts', 'multer', 'express', 'commander');
+    if (installDependencies) packagesToInstall.push('chalk@4', 'chokidar', 'axios', '@clack/prompts', 'multer', 'express');
 
     if (packagesToInstall.length > 0) {
         console.log(chalk.yellow('Installing packages...'));

@@ -44,9 +44,9 @@
 - 🗂️ **Error Logging:** Automatic logging of runtime errors into an `errors` folder.
 - 📊 **Discobase Dashboard:** View and manage your bot's statistics and settings easily.
 - 🔧 **Discobase Generate Command:** Generate new commands and events with ease. For example:
-run this in your terminal!
+run this in your terminal after setuping discobase!
  ```bash
-  discobase generate 
+  npm run generate 
 ```
 
 ## Installation
