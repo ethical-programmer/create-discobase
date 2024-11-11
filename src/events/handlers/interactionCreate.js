@@ -18,10 +18,10 @@ function logErrorToFile(error) {
 
     // Convert the error object into a string, including the stack trace
     const errorMessage = `${error.name}: ${error.message}\n${error.stack}`;
-    
+
     const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
     const filePath = path.join(errorsDir, fileName);
-    
+
     fs.writeFileSync(filePath, errorMessage, 'utf8');
 }
 
@@ -41,8 +41,13 @@ module.exports = {
 
         if (command.adminOnly) {
             if (!config.bot.admins.includes(interaction.user.id)) {
+
+                const embed = new EmbedBuilder()
+                    .setColor('Blue')
+                    .setDescription(`\`❌\` | This command is admin-only. You cannot run this command.`)
+
                 return await interaction.reply({
-                    content: `This command is admin-only. You cannot run this command.`,
+                    embeds: [embed],
                     ephemeral: true
                 });
             }
@@ -50,8 +55,12 @@ module.exports = {
 
         if (command.ownerOnly) {
             if (interaction.user.id !== config.bot.ownerId) {
+                const embed = new EmbedBuilder()
+                    .setColor('Blue')
+                    .setDescription(`\`❌\` | This command is owner-only. You cannot run this command.`)
+
                 return await interaction.reply({
-                    content: `This command is owner-only. You cannot run this command.`,
+                    embeds: [embed],
                     ephemeral: true
                 });
             }
@@ -62,8 +71,13 @@ module.exports = {
             const missingPermissions = command.userPermissions.filter(perm => !memberPermissions.has(perm));
 
             if (missingPermissions.length) {
+
+                const embed = new EmbedBuilder()
+                    .setColor('Blue')
+                    .setDescription(`\`❌\` | You lack the necessary permissions to execute this command: \`\`\`${missingPermissions.join(", ")}\`\`\``)
+
                 return await interaction.reply({
-                    content: `You lack the necessary permissions to execute this command: **${missingPermissions.join(", ")}**`,
+                    embeds: [embed],
                     ephemeral: true
                 });
             }
@@ -75,8 +89,14 @@ module.exports = {
             const botPermissions = interaction.guild.members.me.permissions;
             const missingBotPermissions = command.botPermissions.filter(perm => !botPermissions.has(perm));
             if (missingBotPermissions.length) {
+
+
+                const embed = new EmbedBuilder()
+                    .setColor('Blue')
+                    .setDescription(`\`❌\` | I lack the necessary permissions to execute this command: \`\`\`${missingBotPermissions.join(", ")}\`\`\``)
+
                 return await interaction.reply({
-                    content: `I lack the necessary permissions to execute this command: **${missingBotPermissions.join(", ")}**`,
+                    embeds: [embed],
                     ephemeral: true
                 });
             }
@@ -92,8 +112,13 @@ module.exports = {
 
             if (now < expirationTime) {
                 const timeLeft = (expirationTime - now) / 1000;
+
+                const embed = new EmbedBuilder()
+                    .setColor('Blue')
+                    .setDescription(`\`❌\` | Please wait **${timeLeft.toFixed(1)}** more second(s) before reusing the command.`)
+
                 return await interaction.reply({
-                    content: `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the command.`,
+                    embeds: [embed],
                     ephemeral: true
                 });
             }
@@ -109,24 +134,25 @@ module.exports = {
                 .setColor('#0099ff')
                 .setTitle('Command Executed')
                 .addFields(
-                    { name: 'User', value: `${interaction.user.tag} (${interaction.user.id})`, inline: true },
-                    { name: 'Command', value: `/${command.data.name}`, inline: true },
-                    { name: 'Server', value: `${interaction.guild.name} (${interaction.guild.id})`, inline: true },
+                    { name: 'User', value: `${ interaction.user.tag }(${ interaction.user.id })`, inline: true },
+                    { name: 'Command', value: `/ ${ command.data.name }`, inline: true },
+                    { name: 'Server', value: `${ interaction.guild.name }(${ interaction.guild.id })`, inline: true },
                     { name: 'Timestamp', value: new Date().toLocaleString(), inline: true }
                 )
                 .setTimestamp();
 
             // Send the embed to the specified logs channel
             if (config.logging.commandLogsChannelId) {
+                if (config.logging.commandLogsChannelId === 'COMMAND_LOGS_CHANNEL_ID') return;
                 const logsChannel = client.channels.cache.get(config.logging.commandLogsChannelId);
                 if (logsChannel) {
                     await logsChannel.send({ embeds: [logEmbed] });
                 } else {
-                    console.error(chalk.yellow(`Logs channel with ID ${config.logging.commandLogsChannelId} not found.`));
+                    console.error(chalk.yellow(`Logs channel with ID ${ config.logging.commandLogsChannelId } not found.`));
                 }
             }
         } catch (error) {
-            console.error(chalk.red(`Error executing command "${command.data.name}":`), error);
+            console.error(chalk.red(`Error executing command "${command.data.name}": `), error);
             await interaction.reply({
                 content: 'There was an error while executing this command!',
                 ephemeral: true

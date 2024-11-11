@@ -43,7 +43,11 @@
 - 🔔 Automatic Detection of Missing Intents
 - 🗂️ **Error Logging:** Automatic logging of runtime errors into an `errors` folder.
 - 📊 **Discobase Dashboard:** View and manage your bot's statistics and settings easily.
-
+- 🔧 **`discobase generate` Command:** Generate new commands and events with ease. For example:
+run this in your terminal!
+ ```bash
+  discobase generate 
+```
 
 ## Installation
 

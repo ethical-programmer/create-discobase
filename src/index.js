@@ -9,6 +9,8 @@ const { checkMissingIntents } = require('./functions/handlers/requiredIntents');
 const { antiCrash } = require('./functions/handlers/antiCrash');
 antiCrash();
 require('./functions/handlers/watchFolders');
+const adminFolderPath = path.join(__dirname, '../admin');
+const dashboardFilePath = path.join(adminFolderPath, 'dashboard.js');
 
 const eventsPath = './events';
 
@@ -25,10 +27,10 @@ function logErrorToFile(error) {
 
     // Convert the error object into a string, including the stack trace
     const errorMessage = `${error.name}: ${error.message}\n${error.stack}`;
-    
+
     const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
     const filePath = path.join(errorsDir, fileName);
-    
+
     fs.writeFileSync(filePath, errorMessage, 'utf8');
 }
 
@@ -37,8 +39,11 @@ function logErrorToFile(error) {
     try {
         await client.login(config.bot.token);
         console.log(chalk.green.bold('SUCCESS: ') + 'Bot logged in successfully!');
-        require('../admin/dashboard')
+        if (fs.existsSync(adminFolderPath) && fs.existsSync(dashboardFilePath)) {
+            require(dashboardFilePath);
+            console.log(chalk.green(chalk.green.bold('SUCCESS: Admin dashboard loaded successfully!.')));
 
+        } 
 
         await eventsHandler(client, path.join(__dirname, eventsPath));
         checkMissingIntents(client);

@@ -17,10 +17,10 @@ function logErrorToFile(error) {
     ensureErrorDirectoryExists();
 
     const errorMessage = `${error.name}: ${error.message}\n${error.stack}`;
-    
+
     const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
     const filePath = path.join(errorsDir, fileName);
-    
+
     fs.writeFileSync(filePath, errorMessage, 'utf8');
 }
 
@@ -35,7 +35,7 @@ module.exports = {
 
         const args = content.slice(prefix.length).trim().split(/ +/);
         const commandName = args.shift().toLowerCase();
-        
+
         let command = client.prefix.get(commandName);
         if (!command) {
             command = Array.from(client.prefix.values()).find(
@@ -48,7 +48,11 @@ module.exports = {
 
             const similarCommands = getSimilarCommands(commandName, Array.from(client.prefix.values()));
             if (similarCommands.length > 0) {
-                return await message.reply(`Command not found. Did you mean: ${similarCommands.join(', ')}?`);
+                const embed = new EmbedBuilder()
+                    .setColor('Blue')
+                    .setDescription(`\`🤔\` | Command not found. Did you mean: ${similarCommands.join(', ')}?`)
+
+                return await message.reply({ embeds: [embed] });
             } else {
                 return;
             }
@@ -79,8 +83,13 @@ module.exports = {
             const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
             if (now < expirationTime) {
                 const timeLeft = (expirationTime - now) / 1000;
+
+                const embed = new EmbedBuilder()
+                    .setColor('Blue')
+                    .setDescription(`\`❌\` | Please wait **${timeLeft.toFixed(1)}** more second(s) before reusing the \`${command.name}\` command.`)
+
                 return message.reply({
-                    content: `Please wait ${timeLeft.toFixed(1)} more second(s) before reusing the "${command.name}" command.`,
+                    embeds: [embed]
                 });
             }
         }
@@ -88,15 +97,23 @@ module.exports = {
         timestamps.set(message.author.id, now);
 
         if (command.adminOnly && !config.bot.admins.includes(message.author.id)) {
+            const embed = new EmbedBuilder()
+                .setColor('Blue')
+                .setDescription(`\`❌\` | This command is admin-only. You cannot run this command.`)
+
             return message.reply({
-                content: `This command is admin-only. You cannot run this command.`,
+                embeds: [embed]
             });
         }
 
 
         if (command.ownerOnly && message.author.id !== config.bot.ownerId) {
+            const embed = new EmbedBuilder()
+                .setColor('Blue')
+                .setDescription(`\`❌\` | This command is owner-only. You cannot run this command.`)
+
             return await message.reply({
-                content: `This command is owner-only. You cannot run this command.`,
+                embeds: [embed],
             });
         }
 
@@ -104,8 +121,12 @@ module.exports = {
             const memberPermissions = message.member.permissions;
             const missingPermissions = command.userPermissions.filter(perm => !memberPermissions.has(perm));
             if (missingPermissions.length) {
+                const embed = new EmbedBuilder()
+                    .setColor('Blue')
+                    .setDescription(`\`❌\` | You lack the necessary permissions to execute this command: \`\`\`${missingPermissions.join(", ")}\`\`\``)
+
                 return message.reply({
-                    content: `You lack the necessary permissions to execute this command: **${missingPermissions.join(", ")}**`,
+                    embeds: [embed],
                 });
             }
         }
@@ -114,8 +135,12 @@ module.exports = {
             const botPermissions = message.guild.members.me.permissions;
             const missingBotPermissions = command.botPermissions.filter(perm => !botPermissions.has(perm));
             if (missingBotPermissions.length) {
+                const embed = new EmbedBuilder()
+                    .setColor('Blue')
+                    .setDescription(`\`❌\` | I lack the necessary permissions to execute this command: \`\`\`${missingBotPermissions.join(", ")}\`\`\``)
+
                 return message.reply({
-                    content: `I lack the necessary permissions to execute this command: **${missingBotPermissions.join(", ")}**`,
+                    embeds: [embed],
                 });
             }
         }
@@ -138,6 +163,8 @@ module.exports = {
                 if (logsChannel) {
                     await logsChannel.send({ embeds: [logEmbed] });
                 } else {
+                    if (config.logging.commandLogsChannelId === 'COMMAND_LOGS_CHANNEL_ID') return;
+
                     console.error(chalk.yellow(`Logs channel with ID ${config.logging.commandLogsChannelId} not found.`));
                 }
             }
