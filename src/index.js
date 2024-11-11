@@ -43,7 +43,8 @@ function logErrorToFile(error) {
             require(dashboardFilePath);
             console.log(chalk.green(chalk.green.bold('SUCCESS: Admin dashboard loaded successfully!.')));
 
-        } 
+        }
+        require('./functions/handlers/functionHandler');
 
         await eventsHandler(client, path.join(__dirname, eventsPath));
         checkMissingIntents(client);

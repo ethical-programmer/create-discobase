@@ -41,6 +41,7 @@
 - 🔤 Prefix Commands Support
 - ➗ Slash Commands Support
 - 🔔 Automatic Detection of Missing Intents
+- ⚙️ **Configurable Function Execution:** Allows for setting properties such as `once`, `interval`, `retryAttempts`, `maxExecution`, and `initializer` in your functions to control execution patterns. Ideal for scheduling tasks or retrying operations with ease.
 - 🗂️ **Error Logging:** Automatic logging of runtime errors into an `errors` folder.
 - 📊 **Discobase Dashboard:** View and manage your bot's statistics and settings easily.
 - 🔧 **Discobase Generate Command:** Generate new commands and events with ease. For example:
@@ -99,6 +100,32 @@ To run this project, you will need to provide the necessary values in the config
 | `userPermissions`   | `array`     | **Optional**. List of permissions the user needs to execute the command (e.g., `'Administrator'`, `'KickMembers'`). |
 | `cooldown`          | `number`    | **Optional**. The cooldown time in seconds before the command can be reused. Default is 3 seconds.    |
 
+
+## Function Options
+| Property         | Type       | Description                                                                                          |
+|------------------|------------|------------------------------------------------------------------------------------------------------|
+| `once`           | `boolean`  | If `true`, the function will only execute once. If `false`, it can be executed repeatedly.           |
+| `interval`       | `number`   | The time interval (in milliseconds) between repeated executions of the function.                     |
+| `retryAttempts`  | `number`   | Specifies the number of retry attempts if the function fails during execution.                       |
+| `maxExecution`   | `number`   | Defines the maximum number of times the function can execute.                                        |
+| `initializer`    | `number`   | Initial value or state to use when starting the function; can be used for setup or as a counter.     |
+
+```js
+const exampleFunction = async () => {
+    console.log("Function executed successfully.");
+};
+
+exampleFunction.config = {
+    once: true,           
+    interval: 10000,      
+    retryAttempts: 3,     
+    maxExecution: 5,     
+    initializer: 10       
+};
+
+module.exports = exampleFunction;
+
+```
 
 
 ## Contributing
