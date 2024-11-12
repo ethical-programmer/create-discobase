@@ -2,6 +2,7 @@ const { Interaction, Permissions, EmbedBuilder } = require("discord.js");
 const chalk = require("chalk");
 const config = require('../../../config.json');
 const path = require('path');
+const fs = require('fs');
 
 const errorsDir = path.join(__dirname, '../../../errors'); // Ensure correct path to the root
 

@@ -66,6 +66,8 @@ npx create-discobase@latest
 ```
 This will generate a new **discoBase** project in the current directory.
 
+## Useful Addon
+- [Discobase](https://www.npmjs.com/package/discobase)
 
     
 ## Configuration
