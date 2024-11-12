@@ -162,7 +162,7 @@ async function setupProjectStructure() {
     const packagesToInstall = [];
     if (installDiscord) packagesToInstall.push('discord.js');
     if (installMongo) packagesToInstall.push('mongoose');
-    if (installDependencies) packagesToInstall.push('chalk@4', 'chokidar', 'axios', '@clack/prompts', 'multer', 'express');
+    if (installDependencies) packagesToInstall.push('chalk@4', 'chokidar', 'axios', '@clack/prompts', 'multer', 'express', 'set-interval-async', 'commander');
 
     if (packagesToInstall.length > 0) {
         console.log(chalk.yellow('Installing packages...'));
