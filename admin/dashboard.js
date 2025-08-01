@@ -103,7 +103,7 @@ app.get('/api/bot-data2', async (req, res) => {
         try {
             if (!mongoose) { // only run if mongoose doesn't exist
                 if (!config.database?.mongodbUrl) {
-                    databaseConnection = 'Not Configured');
+                    databaseConnection = 'Not Configured';
                 } else {
 
                     mongoose = require('mongodb');
