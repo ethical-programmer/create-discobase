@@ -1,0 +1,26 @@
+{
+  "bot": {
+    "token": "YOUR_BOT_TOKEN",
+    "id": "YOUR_BOT_ID",
+    "admins": [
+      "ADMIN_1",
+      "ADMIN_2"
+    ],
+    "ownerId": "BOT_OWNER_ID",
+    "developerCommandsServerIds": [
+      "ONLY_DEV_COMMANDS_SERVER_IDS"
+    ]
+  },
+  "database": {
+    "mongodbUrl": "YOUR_MONGODB_URL"
+  },
+  "logging": {
+    "guildJoinLogsId": "GUILD_JOIN_LOGS_CHANNEL_ID",
+    "guildLeaveLogsId": "GUILD_LEAVE_LOGS_CHANNEL_ID",
+    "commandLogsChannelId": "COMMAND_LOGS_CHANNEL_ID",
+    "errorLogs": "YOUR_WEBHOOK_URL"
+  },
+  "prefix": {
+    "value": "YOUR_BOT_PREFIX"
+  }
+}

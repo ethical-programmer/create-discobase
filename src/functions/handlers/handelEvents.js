@@ -1,0 +1,224 @@
+const fs = require('fs');
+const path = require('path');
+const { Collection } = require('discord.js');
+const chokidar = require('chokidar');
+const chalk = require('chalk');
+
+const getTimestamp = () => {
+    return chalk.gray(`[${new Date().toLocaleTimeString()}]`);
+};
+
+const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            func.apply(null, args);
+        }, delay);
+    };
+};
+
+const errorsDir = path.join(__dirname, '../../../errors');
+
+function ensureErrorDirectoryExists() {
+    if (!fs.existsSync(errorsDir)) {
+        fs.mkdirSync(errorsDir);
+    }
+}
+
+function logErrorToFile(error) {
+    try {
+        const discobasePath = path.join(__dirname, '../discobase.json');
+        if (fs.existsSync(discobasePath)) {
+            const discobaseConfig = JSON.parse(fs.readFileSync(discobasePath, 'utf8'));
+            if (discobaseConfig.errorLogging && discobaseConfig.errorLogging.enabled === false) {
+                return;
+            }
+        }
+
+        ensureErrorDirectoryExists();
+
+        const errorMessage = `${error.name}: ${error.message}\n${error.stack}`;
+        const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
+        const filePath = path.join(errorsDir, fileName);
+
+        fs.writeFileSync(filePath, errorMessage, 'utf8');
+    } catch (err) {
+        // Silent fail
+    }
+}
+
+const getShortPath = (filePath) => path.basename(filePath);
+
+const eventsHandler = async (client, eventsPath) => {
+    client.events = new Collection();
+    client.components = new Collection();
+
+    const getFilesRecursively = (dir) => {
+        let files = [];
+        const items = fs.readdirSync(dir);
+
+        for (const item of items) {
+            const fullPath = path.join(dir, item);
+            if (fs.statSync(fullPath).isDirectory()) {
+                files = [...files, ...getFilesRecursively(fullPath)];
+            } else if (item.endsWith('.js')) {
+                files.push(fullPath);
+            }
+        }
+
+        return files;
+    };
+
+    const loadEvent = (file) => {
+        try {
+            delete require.cache[require.resolve(file)];
+            const event = require(file);
+
+            if (event.name) {
+                client.events.set(event.name, event);
+                if (event.once) {
+                    client.once(event.name, (...args) => event.execute(...args, client));
+                } else {
+                    client.on(event.name, (...args) => event.execute(...args, client));
+                }
+
+                console.log(
+                    `${getTimestamp()} ` +
+                    chalk.green.bold('SUCCESS: ') +
+                    `Loaded event: ${chalk.cyan.bold(event.name)} from ${chalk.yellow(getShortPath(file))}`
+                );
+            } else {
+                console.warn(
+                    `${getTimestamp()} ` +
+                    chalk.yellow.bold('WARNING: ') +
+                    `File ${chalk.yellow(getShortPath(file))} does not export a valid event name or customId.`
+                );
+            }
+        } catch (error) {
+            console.error(
+                `${getTimestamp()} ` +
+                chalk.red.bold('ERROR: ') +
+                `Failed to load event/component from ${chalk.yellow(getShortPath(file))}:`,
+                error
+            );
+            logErrorToFile(error);
+        }
+    };
+
+    const loadSchema = (file) => {
+        try {
+            delete require.cache[require.resolve(file)];
+            const schema = require(file);
+
+            console.log(
+                `${getTimestamp()} ` +
+                chalk.green.bold('SUCCESS: ') +
+                `Loaded schema from ${chalk.yellow(getShortPath(file))}`
+            );
+        } catch (error) {
+            console.error(
+                `${getTimestamp()} ` +
+                chalk.red.bold('ERROR: ') +
+                `Failed to load schema from ${chalk.yellow(getShortPath(file))}:`,
+                error
+            );
+            logErrorToFile(error);
+        }
+    };
+
+    const unloadEvent = (file) => {
+        try {
+            const event = require(file);
+
+            if (event.name && client.events.has(event.name)) {
+                client.removeAllListeners(event.name);
+                client.events.delete(event.name);
+                console.log(
+                    `${getTimestamp()} ` +
+                    chalk.blue.bold('UNLOAD: ') +
+                    `Unloaded event: ${chalk.cyan.bold(event.name)}`
+                );
+            } else {
+                console.warn(
+                    `${getTimestamp()} ` +
+                    chalk.yellow.bold('WARNING: ') +
+                    `Event/Component "${chalk.red(getShortPath(file))}" not found in client collections.`
+                );
+            }
+        } catch (error) {
+            console.error(
+                `${getTimestamp()} ` +
+                chalk.red.bold('ERROR: ') +
+                `Failed to unload from ${chalk.yellow(getShortPath(file))}:`,
+                error
+            );
+            logErrorToFile(error);
+        }
+    };
+
+    const loadAllEvents = (eventDir) => {
+        const eventFiles = getFilesRecursively(eventDir);
+        eventFiles.forEach(file => loadEvent(file));
+    };
+
+    const loadAllSchemas = (schemasDir) => {
+        const schemaFiles = getFilesRecursively(schemasDir);
+        schemaFiles.forEach(file => loadSchema(file));
+    };
+
+    loadAllEvents(eventsPath);
+    loadAllSchemas(path.join(__dirname, '../../schemas'));
+
+    const watcher = chokidar.watch([eventsPath, path.join(__dirname, '../../schemas')], {
+        persistent: true,
+        ignoreInitial: true,
+        awaitWriteFinish: true,
+        ignored: [
+            path.join(__dirname, '../../functions/**'),
+        ],
+    });
+
+    watcher
+        .on('add', (filePath) => {
+            if (filePath.endsWith('.js')) {
+                console.log(
+                    `${getTimestamp()} ` +
+                    chalk.blue.bold('WATCHER: ') +
+                    `New file added: ${chalk.yellow.bold(getShortPath(filePath))}`
+                );
+                if (filePath.includes('schemas')) {
+                    loadSchema(filePath);
+                } else {
+                    loadEvent(filePath);
+                }
+            }
+        })
+        .on('change', (filePath) => {
+            console.log(
+                `${getTimestamp()} ` +
+                chalk.blue.bold('WATCHER: ') +
+                `File changed: ${chalk.yellow.bold(getShortPath(filePath))}`
+            );
+            if (filePath.includes('schemas')) {
+                loadSchema(filePath);
+            } else {
+                unloadEvent(filePath);
+                loadEvent(filePath);
+            }
+        })
+        .on('unlink', (filePath) => {
+            console.log(
+                `${getTimestamp()} ` +
+                chalk.blue.bold('WATCHER: ') +
+                `File removed: ${chalk.yellow.bold(getShortPath(filePath))}`
+            );
+            if (filePath.includes('schemas')) {
+                // nothing to unload for schema
+            } else {
+                unloadEvent(filePath);
+            }
+        });
+};
+
+module.exports = { eventsHandler };

@@ -1,0 +1,22 @@
+{
+  "errorLogging": {
+    "enabled": false
+  },
+  "presence": {
+    "enabled": false,
+    "status": "dnd",
+    "interval": 10000,
+    "type": "PLAYING",
+    "names": [
+      "with DiscoBase",
+      "with commands",
+      "with your server",
+      "DiscoBase v2.0.10"
+    ],
+    "//_streamingUrl_note": "!=! This is only for the STREAMING activity type !=!",
+    "streamingUrl": "https://www.twitch.tv/example",
+  
+    "//_customState_note": "!=! This is only for the CUSTOM activity type !=!",
+    "customState": "🚀 discobase!"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "name": "create-discobase",
+  "version": "2.5.1",
+  "description": "Easily create and manage your Discord bot with our powerful toolkit! 🚀",
+  "main": "src/index.js",
+  "bin": {
+    "create-discobase": "./setup.mjs"
+  },
+  "scripts": {
+    "start": "node .",
+    "generate": "node cli.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7.0",
+    "@types/node": "^22.17.0",
+    "axios": "^1.11.0",
+    "boxen": "^2.1.0",
+    "chalk": "^4.1.2",
+    "chokidar": "^4.0.3",
+    "cli-progress": "^3.12.0",
+    "cors": "^2.8.5",
+    "discord.js": "^14.21.0",
+    "express": "^5.1.0",
+    "figlet": "^1.8.2",
+    "fs-extra": "^10.1.0",
+    "gradient-string": "^3.0.0",
+    "mongodb": "^6.18.0",
+    "mongoose": "^8.16.5",
+    "multer": "^2.0.2",
+    "set-interval-async": "^3.0.3"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "commands",
+    "command handler",
+    "event handler",
+    "toolkit",
+    "discord.js"
+  ],
+  "author": "Ethical Programmer",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ethical-programmer/create-discobase"
+  },
+  "homepage": "https://www.discobase.site/",
+  "bugs": {
+    "url": "https://github.com/ethical-programmer/create-discobase/issues"
+  },
+  "contributors": [
+    {
+      "name": "Ethical Programmer",
+      "url": "https://github.com/ethical-programmer"
+    },
+    {
+      "name": "Krunal Patil",
+      "url": "https://github.com/KrunalPatil6214"
+    }
+  ]
+}
