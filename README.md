@@ -1,4 +1,4 @@
-![Logo](https://i.ibb.co/HppNtvMj/disco.png)
+![Logo](https://i.ibb.co/qMbHPKtY/disco-1.png)
 
 <div align="center">
 
