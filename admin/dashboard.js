@@ -67,95 +67,60 @@ app.get('/api/bot-info', async (req, res) => {
     }
 })
 
+const MONGOOSE_STATES = {
+    0: 'Disconnected',
+    1: 'Active',
+    2: 'Connecting',
+    3: 'Disconnecting'
+}
+
+const WEBSOCKET_STATES = {
+    0: 'Stable',
+    1: 'Connecting',
+    2: 'Reconnecting',
+    3: 'Idle',
+    4: 'Nearly Ready',
+    5: 'Disconnected',
+    6: 'Loading',
+    7: 'Identifying',
+    8: 'Resuming'
+}
+    
+
 app.get('/api/bot-data2', async (req, res) => {
     try {
         // API Response Time (measure actual API processing time)
-        
-        // Database Connection Status
-        let databaseConnection = 'Unknown';
-        
+
+        const config = loadConfig();
+
+        let mongoose, databaseConnection = 'Unknown';
+
         try {
-            // Check if MongoDB is configured
-            const config = loadConfig();
-            if (config.database && config.database.mongodbUrl) {
-                try {
-                    const mongoose = require('mongoose');
-                    
-                    // Check mongoose connection state
-                    switch (mongoose.connection.readyState) {
-                        case 0: // DISCONNECTED
-                            databaseConnection = 'Disconnected';
-                            break;
-                        case 1: // CONNECTED
-                            databaseConnection = 'Active';
-                            break;
-                        case 2: // CONNECTING
-                            databaseConnection = 'Connecting';
-                            break;
-                        case 3: // DISCONNECTING
-                            databaseConnection = 'Disconnecting';
-                            break;
-                        default:
-                            databaseConnection = 'Offline';
-                    }
-                } catch (mongooseError) {
-                    // If mongoose is not installed or not imported
-                    try {
-                        const { MongoClient } = require('mongodb');
-                        const client = new MongoClient(config.database.mongodbUrl, {
-                            serverSelectionTimeoutMS: 5000
-                        });
-                        
-                        await client.connect();
-                        await client.db().admin().ping();
-                        databaseConnection = 'Active';
-                        await client.close();
-                    } catch (directMongoError) {
-                        databaseConnection = 'Connection Failed';
-                    }
+            mongoose = require('mongoose');
+            databaseConnection = MONGOOSE_STATES[mongoose.connection.readyState];
+        } catch (error) { /* do nothing */ }
+
+        try {
+            if (!mongoose) { // only run if mongoose doesn't exist
+                if (!config.database?.mongodbUrl) {
+                    databaseConnection = 'Not Configured'
+                } else {
+
+                    mongoose = require('mongodb');
+                    const client = new MongoClient(config.database.mongodbUrl, {
+                        serverSelectionTimeoutMS: 5000
+                    });
+
+                    await client.connect();
+                    await client.db().admin().ping();
+                    databaseConnection = 'Active';
+                    await client.close();
                 }
-            } else {
-                databaseConnection = 'Not Configured';
             }
-        } catch (error) {
-            databaseConnection = 'Error';
-        }
+        } catch (error) { /* do nothing */ }
         
         // WebSocket Connection Status
-        let websocketConnection = 'Unknown';
-        if (client.ws) {
-            switch (client.ws.status) {
-                case 0: // READY
-                    websocketConnection = 'Stable';
-                    break;
-                case 1: // CONNECTING
-                    websocketConnection = 'Connecting';
-                    break;
-                case 2: // RECONNECTING
-                    websocketConnection = 'Reconnecting';
-                    break;
-                case 3: // IDLE
-                    websocketConnection = 'Idle';
-                    break;
-                case 4: // NEARLY
-                    websocketConnection = 'Nearly Ready';
-                    break;
-                case 5: // DISCONNECTED
-                    websocketConnection = 'Disconnected';
-                    break;
-                case 6: // WAITING_FOR_GUILDS
-                    websocketConnection = 'Loading';
-                    break;
-                case 7: // IDENTIFYING
-                    websocketConnection = 'Identifying';
-                    break;
-                case 8: // RESUMING
-                    websocketConnection = 'Resuming';
-                    break;
-                default:
-                    websocketConnection = 'Offline';
-            }
-        }
+        let websocketConnection = WEBSOCKET_STATES[client.ws?.status] ?? 'Unknown';
         
         // Memory Usage
         const memoryUsage = process.memoryUsage();
@@ -191,7 +156,7 @@ app.get('/api/bot-data2', async (req, res) => {
                 },
                 websocket: {
                     status: websocketConnection,
-                    connected: client.ws ? client.ws.status === 0 : false
+                    connected: client.ws?.status === 0
                 }
             },
             
