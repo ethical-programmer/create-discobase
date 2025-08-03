@@ -1,6 +1,6 @@
 {
   "name": "create-discobase",
-  "version": "2.5.3",
+  "version": "2.5.4",
   "description": "Easily create and manage your Discord bot with our powerful toolkit! 🚀",
   "main": "src/index.js",
   "bin": {

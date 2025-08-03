@@ -93,7 +93,7 @@ module.exports = {
                     });
                 }
             }
-            
+
             if (command.requiredRoles && command.requiredRoles.length > 0) {
                 const memberRoles = interaction.member.roles.cache;
                 const hasRequiredRole = command.requiredRoles.some(roleId => memberRoles.has(roleId));
@@ -174,7 +174,13 @@ module.exports = {
                     .addFields(
                         { name: 'User', value: `${interaction.user.tag}(${interaction.user.id})`, inline: true },
                         { name: 'Command', value: `/${command.data.name}`, inline: true },
-                        { name: 'Server', value: `${interaction.guild.name}(${interaction.guild.id})`, inline: true },
+                        {
+                            name: 'Server',
+                            value: interaction.guild
+                                ? `${interaction.guild.name} (${interaction.guild.id})`
+                                : 'Direct Message',
+                            inline: true
+                        },
                         { name: 'Timestamp', value: new Date().toLocaleString(), inline: true }
                     )
                     .setTimestamp();
