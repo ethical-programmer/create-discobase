@@ -144,6 +144,31 @@ exampleFunction.config = {
 module.exports = exampleFunction;
 ```
 
+## 🔍 Activity Tracker
+
+Track all file changes in your project in real-time — additions, edits, deletions, and renames — directly in your terminal.
+
+The **Activity Tracker** is fully configurable through `discobase.json`.
+
+| Property                    | Type    | Description                                                                        |
+|-----------------------------|---------|------------------------------------------------------------------------------------|
+| `activityTracker.enabled`   | boolean | Enable or disable the tracker globally.                                            |
+| `activityTracker.ignoredPaths` | array  | Glob patterns of paths to ignore. Merges with default ignored paths automatically. |
+
+**Example `discobase.json`:**
+
+```json
+{
+  "activityTracker": {
+    "enabled": true,
+    "ignoredPaths": [
+      "**/logs/**",
+      "**/private/**"
+    ]
+  }
+}
+```
+
 ---
 
 ## ✨ Generate with Ease
