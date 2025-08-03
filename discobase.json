@@ -15,8 +15,16 @@
     ],
     "//_streamingUrl_note": "!=! This is only for the STREAMING activity type !=!",
     "streamingUrl": "https://www.twitch.tv/example",
-  
     "//_customState_note": "!=! This is only for the CUSTOM activity type !=!",
     "customState": "🚀 discobase!"
+  },
+  "activityTracker": {
+    "enabled": true,
+    "ignoredPaths": [
+      "**/node_modules/**",
+      ".git",
+      ".gitignore",
+      "discobase.json"
+    ]
   }
 }

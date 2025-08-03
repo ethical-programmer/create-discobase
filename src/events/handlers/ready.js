@@ -5,10 +5,14 @@ const { ActivityType } = require('discord.js');
 const { prefixHandler } = require('../../functions/handlers/prefixHandler');
 const { handleCommands } = require('../../functions/handlers/handleCommands');
 const path = require('path');
-const gradient = require('gradient-string').default;
 const fs = require('fs');
 
 const errorsDir = path.join(__dirname, '../../../errors');
+
+async function loadGradient() {
+  const mod = await import('gradient-string');
+  return mod.default;
+}
 
 // Helper function to update presence based on name rotation
 function updatePresence(client, config, nameIndex) {
@@ -138,6 +142,7 @@ module.exports = {
             logWithStyle('INFO', 'MongoDB URL is not provided or is set to the default placeholder. Skipping MongoDB connection.');
         } else {
             try {
+                gradient = await loadGradient();
                 await mongoose.connect(config.database.mongodbUrl);
                 if (mongoose.connect) {
                     console.log(

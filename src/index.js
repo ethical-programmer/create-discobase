@@ -19,7 +19,7 @@ const config = require('../config.json');
 const figlet = require('figlet');
 const fs = require('fs');
 const path = require('path');
-const gradient = require('gradient-string').default;
+// const gradient = require('gradient-string').default;
 
 // ──────────────[ Function Handlers ]──────────────
 const { eventsHandler } = require('./functions/handlers/handelEvents');
@@ -45,6 +45,11 @@ function ensureErrorDirectoryExists() {
     if (!fs.existsSync(errorsDir)) {
         fs.mkdirSync(errorsDir);
     }
+}
+
+async function loadGradient() {
+    const mod = await import('gradient-string');
+    return mod.default;
 }
 
 function logErrorToFile(error) {
@@ -180,6 +185,7 @@ function logger(type, message) {
 
 // ──────────────[ Main Bot Code ]──────────────
 (async () => {
+    gradient = await loadGradient();
     await printAsciiArt();
     try {
         await client.login(config.bot.token);
@@ -191,15 +197,8 @@ function logger(type, message) {
         }
 
         // Initialize activity tracker to watch the entire project
-        initActivityTracker(path.join(__dirname, '..'), [
-            '**/admin/**', // Ignore admin folder
-            '**/node_modules/**', // Ignore node_modules
-            '**/errors/**', // Ignore errors folder
-            '**/package-lock.json', // Ignore package-lock.json
-            '**/.git/**', // Ignore git folder
-            '**/dist/**', // Ignore dist folder
-            '**/build/**' // Ignore build folder
-        ]);
+       initActivityTracker(path.join(__dirname, '..'));
+
 
         logger('SUCCESS', 'Activity tracker initialized for all project folders');
         

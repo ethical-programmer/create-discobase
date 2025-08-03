@@ -2,7 +2,6 @@
 const { REST, Routes, Collection } = require('discord.js');
 const fs = require('fs');
 const chalk = require('chalk');
-const gradient = require('gradient-string');
 const config = require('../../../config.json');
 const path = require('path');
 const chokidar = require('chokidar');
