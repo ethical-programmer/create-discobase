@@ -1,7 +1,7 @@
 //! This is a basic structure for a slash command in a discoBase using discord.js
 
 
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
     //! The 'data' property defines the slash command's structure using SlashCommandBuilder.
@@ -36,9 +36,9 @@ module.exports = {
     //? Optional: Only allow users with these role IDs to run this command
     //? requiredRoles: ['1400100100176478330', '987654321098765432'],
 
-
     //! The 'execute' function is where the main logic for the command is placed.
     async execute(interaction, client) {
+        await interaction.deferReply({ ephemeral: true });
         try {
            
             const ping = Date.now() - interaction.createdTimestamp;
@@ -46,7 +46,8 @@ module.exports = {
             const latencyFormatted = `${latency.toString().substring(0, 2)}ms`;
             const emoji = "⏱️";
 
-            await interaction.reply(`${emoji} Pong! Latency is ${latencyFormatted}!`);
+            await interaction.editReply({ content: `${emoji} Pong! Latency is ${latencyFormatted}!`, flags: MessageFlags.Ephemeral});
+
         } catch (error) {
             console.error('An error occurred while executing the command:', error);
         }

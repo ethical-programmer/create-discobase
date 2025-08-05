@@ -110,7 +110,6 @@ module.exports = {
                 }
             }
 
-
             if (command.botPermissions) {
                 const botPermissions = interaction.guild.members.me.permissions;
                 const missingBotPermissions = command.botPermissions.filter(perm => !botPermissions.has(perm));
