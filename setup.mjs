@@ -176,7 +176,7 @@ function copyProjectStructure(source, destination, includeDashboard) {
 
 function createPackageJson(destination) {
     const packageJson = {
-        name: path.basename(destination),
+    name: path.basename(destination).toLowerCase().replace(/\s+/g, '-'),
         version: "1.0.0",
         description: "Discord bot created with Discobase",
         main: "src/index.js",

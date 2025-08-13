@@ -48,11 +48,8 @@ function updatePresence(client, config, nameIndex) {
         // Handle special activity types
         if (type === ActivityType.Streaming && config.streamingUrl) {
             // Validate streaming URL
-            if (config.streamingUrl.includes('twitch.tv') || config.streamingUrl.includes('youtube.com')) {
-                presenceActivity.url = config.streamingUrl;
-            } else {
-                presenceActivity.url = 'https://www.twitch.tv/discobase';
-                logWithStyle('WARNING', 'Invalid streaming URL. Using default.');
+            if (!config.streamingUrl) {
+                logWithStyle('WARNING', 'Invalid streaming URL. Please provide a valid URL.');
             }
         } else if (type === ActivityType.Custom && config.customState) {
             presenceActivity.state = config.customState;
