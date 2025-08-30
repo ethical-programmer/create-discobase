@@ -130,7 +130,7 @@ function logWithStyle(status, message) {
 }
 
 module.exports = {
-    name: 'ready',
+    name: 'clientReady',
     once: true,
     async execute(client) {
         logWithStyle('SUCCESS', 'Bot is ready and connected to Discord!');
