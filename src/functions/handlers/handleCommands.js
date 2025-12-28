@@ -5,18 +5,20 @@ const chalk = require('chalk');
 const config = require('../../../config.json');
 const path = require('path');
 const chokidar = require('chokidar');
-const gradient = require('gradient-string');
+const gradientPkg = require('gradient-string');
+const gradient = gradientPkg.default || gradientPkg;
+
 const activities = [];
 
 const addActivity = (action, filePath) => {
     const timestamp = new Date().toLocaleTimeString(); // Changed from toISOString() to match Console expectation
     const message = `${action} ${formatFilePath(filePath)}`;
-    activities.push({ 
-        type: action, 
-        message: message, 
-        timestamp 
+    activities.push({
+        type: action,
+        message: message,
+        timestamp
     });
-    
+
     // Keep only last 100 activities to prevent memory issues
     if (activities.length > 100) {
         activities.shift();
@@ -31,8 +33,8 @@ const getActivities = () => activities;
 const log = (message, type = 'INFO') => {
     const timestamp = new Date().toLocaleTimeString();
     let icon, color;
-    
-    switch(type) {
+
+    switch (type) {
         case 'SUCCESS':
             icon = '✓'; // ✓
             color = chalk.green.bold(`${icon} ${type}`);
@@ -53,18 +55,18 @@ const log = (message, type = 'INFO') => {
             icon = '•'; // •
             color = chalk.white.bold(`${icon} ${type}`);
     }
-    
+
     // Create a box-like format for the log message
     const timeBox = chalk.gray(`[${timestamp}]`);
     const messageText = chalk.white(message);
-    
+
     console.log(`${timeBox} ${color} ${chalk.white('│')} ${messageText}`);
-    
+
     // Add activities for all log messages
     addActivity(type.toLowerCase(), message);
 };
 
-const errorsDir = path.join(__dirname, '../../../errors'); 
+const errorsDir = path.join(__dirname, '../../../errors');
 
 function ensureErrorDirectoryExists() {
     if (!fs.existsSync(errorsDir)) {
@@ -83,15 +85,15 @@ function logErrorToFile(error) {
                 return;
             }
         }
-        
+
         ensureErrorDirectoryExists();
 
         // Convert the error object into a string, including the stack trace
         const errorMessage = `${error.name}: ${error.message}\n${error.stack}`;
-        
+
         const fileName = `${new Date().toISOString().replace(/:/g, '-')}.txt`;
         const filePath = path.join(errorsDir, fileName);
-        
+
         fs.writeFileSync(filePath, errorMessage, 'utf8');
     } catch (err) {
         // If there's an error while logging the error, just silently fail
@@ -125,7 +127,7 @@ const loadCommand = (client, filePath) => {
     try {
         if (filePath.includes('schemas')) {
             log(`Ignoring schema file: ${formatFilePath(filePath)}`, 'WARNING');
-            return null; 
+            return null;
         }
 
         delete require.cache[require.resolve(filePath)];
@@ -142,8 +144,11 @@ const loadCommand = (client, filePath) => {
     } catch (error) {
         log(`Failed to load command from "${formatFilePath(filePath)}".`, 'ERROR');
         const timestamp = new Date().toLocaleTimeString();
-        const errorGradient = gradient(['#FF0000', '#8B0000']);
-        console.log(`${chalk.gray(`[${timestamp}]`)} ${errorGradient("✖ ERROR")} ${chalk.white('│')} ${error.message}`);
+        console.log(
+            `${chalk.gray(`[${timestamp}]`)} ${gradient(['#ff0000', '#8b0000'])("✖ ERROR")} ${chalk.white('│')} ${error.message}`
+        );
+
+
         logErrorToFile(error)
         return null;
     }
@@ -181,7 +186,7 @@ const unregisterCommand = async (commandName, rest, config, devCommandArray) => 
             await rest.delete(Routes.applicationCommand(config.bot.id, commandToDelete.id));
             log(`Successfully unregistered global command: ${commandName}`, 'SUCCESS');
         }
-        
+
 
         if (devCommandArray.length > 0 && config.bot.developerCommandsServerIds && config.bot.developerCommandsServerIds.length > 0) {
             for (const serverId of config.bot.developerCommandsServerIds) {
@@ -196,9 +201,11 @@ const unregisterCommand = async (commandName, rest, config, devCommandArray) => 
     } catch (error) {
         log(`Failed to unregister command: ${commandName}`, 'ERROR');
         const timestamp = new Date().toLocaleTimeString();
-        const errorGradient = gradient(['#FF0000', '#8B0000']);
-        console.log(`${chalk.gray(`[${timestamp}]`)} ${errorGradient("✖ ERROR")} ${chalk.white('│')} ${error.message}`);
-        logErrorToFile(error)
+        console.log(
+            `${chalk.gray(`[${timestamp}]`)} ${gradient(['#ff0000', '#8b0000'])("✖ ERROR")} ${chalk.white('│')} ${error.message}`
+        );
+
+
     }
 };
 
@@ -221,7 +228,10 @@ const registerCommands = async (globalCommandArray, devCommandArray, rest, confi
             } else {
                 const timestamp = new Date().toLocaleTimeString();
                 const errorText = chalk.red.bold("✖ ERROR");
-                console.log(`${chalk.gray(`[${timestamp}]`)} ${errorText} ${chalk.white('│')} Failed to register commands: ${error.message}`);
+                console.log(
+                    `${chalk.gray(`[${timestamp}]`)} ${gradient(['#ff0000', '#8b0000'])("✖ ERROR")} ${chalk.white('│')} ${error.message}`
+                );
+
                 logErrorToFile(error)
             }
         }
@@ -240,7 +250,10 @@ const registerCommands = async (globalCommandArray, devCommandArray, rest, confi
                 log(`Failed to reload developer guild (/) commands for server: ${serverId}`, 'ERROR');
                 const timestamp = new Date().toLocaleTimeString();
                 const errorText = chalk.red.bold("✖ ERROR");
-                console.log(`${chalk.gray(`[${timestamp}]`)} ${errorText} ${chalk.white('│')} ${error.message}`);
+                console.log(
+                    `${chalk.gray(`[${timestamp}]`)} ${gradient(['#ff0000', '#8b0000'])("✖ ERROR")} ${chalk.white('│')} ${error.message}`
+                );
+
                 logErrorToFile(error)
             }
         });
@@ -300,7 +313,7 @@ const handleCommands = async (client, commandsPath) => {
         .on('add', (filePath) => {
             if (filePath.includes('schemas')) {
                 log(`Schema file added: ${formatFilePath(filePath)}`, 'WARNING');
-                return; 
+                return;
             }
 
             if (filePath.includes('functions')) {
@@ -333,7 +346,7 @@ const handleCommands = async (client, commandsPath) => {
         .on('unlink', async (filePath) => {
             if (filePath.includes('schemas')) {
                 log(`Schema file removed: ${formatFilePath(filePath)}`, 'WARNING');
-                return; 
+                return;
             }
 
             if (filePath.includes('functions')) {
@@ -354,5 +367,5 @@ const handleCommands = async (client, commandsPath) => {
 
 module.exports = {
     handleCommands,
-    getActivities 
+    getActivities
 };
