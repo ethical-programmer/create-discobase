@@ -147,6 +147,7 @@ const checkPermissions = async (event, interaction) => {
 const eventsHandler = async (client, eventsPath) => {
     client.events = new Collection();
     client.components = new Collection();
+    client.activeEventListeners = new Map();
 
     const getFilesRecursively = (dir) => {
         let files = [];
@@ -260,6 +261,9 @@ const eventsHandler = async (client, eventsPath) => {
                     client.on(event.name, wrappedExecute);
                 }
 
+                // Store the listener for safe removal
+                client.activeEventListeners.set(file, { name: event.name, listener: wrappedExecute });
+
                 console.log(
                     `${getTimestamp()} ` +
                     chalk.green.bold('SUCCESS: ') +
@@ -306,21 +310,24 @@ const eventsHandler = async (client, eventsPath) => {
 
     const unloadEvent = (file) => {
         try {
-            const event = require(file);
+            const listenerData = client.activeEventListeners.get(file);
 
-            if (event.name && client.events.has(event.name)) {
-                client.removeAllListeners(event.name);
-                client.events.delete(event.name);
+            if (listenerData) {
+                const { name, listener } = listenerData;
+                
+                // Safely remove the specific listener
+                client.removeListener(name, listener);
+                
+                // Clean up tracking maps
+                client.activeEventListeners.delete(file);
+                if (client.events.has(name)) {
+                    client.events.delete(name);
+                }
+
                 console.log(
                     `${getTimestamp()} ` +
                     chalk.blue.bold('UNLOAD: ') +
-                    `Unloaded event: ${chalk.cyan.bold(event.name)}`
-                );
-            } else {
-                console.warn(
-                    `${getTimestamp()} ` +
-                    chalk.yellow.bold('WARNING: ') +
-                    `Event/Component "${chalk.red(getShortPath(file))}" not found in client collections.`
+                    `Unloaded event: ${chalk.cyan.bold(name)}`
                 );
             }
         } catch (error) {

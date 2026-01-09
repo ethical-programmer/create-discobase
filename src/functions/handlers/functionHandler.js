@@ -15,7 +15,9 @@ const getAllFunctionFiles = (dir) => {
         const stat = fs.statSync(filePath);
 
         if (stat && stat.isDirectory()) {
-            results = results.concat(getAllFunctionFiles(filePath));
+            if (file !== 'handlers') {
+                results = results.concat(getAllFunctionFiles(filePath));
+            }
         } else if (file.endsWith('.js')) {
             results.push(filePath);
         }
