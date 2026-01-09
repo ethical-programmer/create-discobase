@@ -41,6 +41,7 @@ The interactive setup will guide you through:
 - **Hot Reload** - Changes apply instantly without restart
 - **Command Generator** - Scaffold new commands with `npm run generate`
 - **Command Manager** - Enable/disable commands with `npm run manage`
+- **Middleware** - Pre-execution logic for commands
 
 ### 🔐 Advanced Controls
 - **Bot Permissions** - Automatic bot permission validation
@@ -50,6 +51,7 @@ The interactive setup will guide you through:
 - **Role Requirements** - Restrict commands to specific roles
 - **Owner/Admin Only** - Special access controls
 - **Dev Mode** - Test commands in specific servers
+- **Sharding** - Built-in scaling support (Optional)
 
 ### 📊 Dashboard & Monitoring
 - **Real-time Stats** - Monitor bot performance live
@@ -64,6 +66,7 @@ The interactive setup will guide you through:
 - **MongoDB Integration** - Built-in database support with Mongoose
 - **Configurable Functions** - Advanced function options
 - **Error Recovery** - Graceful error handling
+- **TypeScript Support** - Enhanced IntelliSense & type checking
 
 
 ## 📦 Installation
@@ -104,6 +107,38 @@ module.exports = {
   }
 };
 ```
+
+## 🛡️ Middleware System
+
+DiscoBase includes a powerful middleware system that runs **before** any slash command is executed. Use it for global checks like blacklists, maintenance mode, or custom analytics.
+
+**Location:** `src/middleware/index.js`
+
+```javascript
+module.exports = {
+    // Return true to continue, false to block the command
+    checkBlacklist: async (interaction) => {
+        const isBlacklisted = await db.blacklist.findOne({ userId: interaction.user.id });
+        if (isBlacklisted) {
+            await interaction.reply({ content: 'You are blacklisted.', ephemeral: true });
+            return false; // Blocks command
+        }
+        return true; // Continues execution
+    }
+};
+```
+
+## 📡 Sharding (Optional)
+
+For large bots (2,500+ servers), DiscoBase supports automatic sharding. You can enable this during setup.
+
+**Usage:**
+```bash
+node sharding.js
+# or add "shard": "node sharding.js" to your package.json scripts
+```
+
+This will spawn multiple processes of your bot to handle high load, automatically managed by Discord.js `ShardingManager`.
 
 ## 📅 Event Options
 

@@ -86,7 +86,7 @@ async function createProject() {
         process.exit(0);
     }
 
-    const useCurrentDir = await select({
+    const useCurrentDirResult = await select({
         message: 'Where would you like to create your project?',
         options: [
             { value: 'new', label: '📁 Create in a new folder' },
@@ -94,11 +94,17 @@ async function createProject() {
         ]
     });
 
+    if (isCancel(useCurrentDirResult)) {
+        cancel('Setup cancelled');
+        process.exit(0);
+    }
+    const useCurrentDir = String(useCurrentDirResult);
+
     let projectName;
     let destination;
 
     if (useCurrentDir === 'new') {
-        projectName = await text({
+        const projectNameResult = await text({
             message: 'What is your project name?',
             placeholder: 'my-discord-bot',
             validate: (value) => {
@@ -107,11 +113,19 @@ async function createProject() {
                 if (!/^[a-z0-9-_]+$/i.test(value)) return 'Use only letters, numbers, hyphens, and underscores';
             }
         });
+        if (isCancel(projectNameResult)) {
+            cancel('Setup cancelled');
+            process.exit(0);
+        }
+        projectName = String(projectNameResult);
         destination = path.join(process.cwd(), projectName);
     } else {
         projectName = path.basename(process.cwd());
         destination = process.cwd();
     }
+
+    // Ensure projectName is a string
+    projectName = String(projectName);
 
     // Check if directory exists and is not empty
     if (fs.existsSync(destination) && fs.readdirSync(destination).length > 0) {
@@ -158,22 +172,46 @@ async function createProject() {
         process.exit(0);
     }
 
+    // Ask about Sharding (for both versions)
+    const includeSharding = await confirm({
+        message: 'Enable Sharding System? (Optional)',
+        initialValue: false
+    });
+
+    if (isCancel(includeSharding)) {
+        cancel('Setup cancelled');
+        process.exit(0);
+    }
+
     // If old version selected, copy the template and handle dependencies
     if (versionChoice === 'old') {
         const s = spinner();
         s.start('Copying full source code template...');
 
-        const oldTemplatePath = path.join(__dirname, 'create-discobase');
+        const oldTemplatePath = __dirname;
 
         // Copy everything except .git, node_modules, and setup files
         const itemsToCopy = fs.readdirSync(oldTemplatePath);
 
         for (const item of itemsToCopy) {
+            // Skip typical ignore files/folders
             if (item === '.git' || item === 'node_modules' || item === 'setup.mjs' || item === 'package-lock.json') {
                 continue;
             }
 
+            // Skip the destination folder itself if it's inside the current directory
             const sourcePath = path.join(oldTemplatePath, item);
+            const resolvedSource = path.resolve(sourcePath);
+            const resolvedDest = path.resolve(destination);
+
+            // Prevent copying if the source is the destination OR an ancestor of the destination
+            if (resolvedDest.startsWith(resolvedSource)) {
+                 // Ensure it's a true parent (slash check) or exact match
+                 if (resolvedDest === resolvedSource || resolvedDest[resolvedSource.length] === path.sep) {
+                     continue;
+                 }
+            }
+
             const destPath = path.join(destination, item);
 
             if (fs.statSync(sourcePath).isDirectory()) {
@@ -190,6 +228,14 @@ async function createProject() {
             const dashboardPath = path.join(destination, 'admin');
             if (fs.existsSync(dashboardPath)) {
                 fs.rmSync(dashboardPath, { recursive: true, force: true });
+            }
+        }
+
+        // Remove sharding.js if user doesn't want it
+        if (!includeSharding) {
+            const shardingPath = path.join(destination, 'sharding.js');
+            if (fs.existsSync(shardingPath)) {
+                fs.unlinkSync(shardingPath);
             }
         }
 
@@ -321,6 +367,28 @@ async function createProject() {
         }
     };
     fs.writeFileSync(path.join(destination, 'discobase.json'), JSON.stringify(discobaseJson, null, 2));
+
+    // Create sharding.js if requested
+    if (includeSharding) {
+        const shardingContent = `const { ShardingManager } = require('discord.js');
+const config = require('./config.json');
+const chalk = require('chalk');
+
+const manager = new ShardingManager('./src/index.js', { 
+    token: config.bot.token,
+    totalShards: 'auto' 
+});
+
+manager.on('shardCreate', shard => {
+    console.log(chalk.blue(\`[SHARD] Launched shard \${shard.id}\`));
+});
+
+manager.spawn().catch(error => {
+    console.error(chalk.red('[SHARDING ERROR] Failed to spawn shards:'), error);
+});
+`;
+        fs.writeFileSync(path.join(destination, 'sharding.js'), shardingContent);
+    }
 
     // Create example slash command
     const slashCommandContent = `//! This is a basic structure for a slash command in a discoBase using discord.js
@@ -608,7 +676,7 @@ Visit [https://www.discobase.site](https://www.discobase.site) for full document
     note(successMessage, chalk.green.bold('Setup Complete'));
     
     outro(chalk.bold.cyan('✨ Happy coding! 🚀 Let\'s build something amazing!'));
-}    
+}
 
 // Run the script
 createProject().catch(error => {

@@ -4,6 +4,12 @@ const config = require('../../../config.json');
 const path = require('path');
 const fs = require('fs');
 const mongoose = require('mongoose');
+let middleware;
+try {
+    middleware = require('../../middleware/index.js');
+} catch (e) {
+    middleware = {};
+}
 
 const errorsDir = path.join(__dirname, '../../../errors');
 
@@ -165,6 +171,16 @@ module.exports = {
             if (!command) {
                 console.log(chalk.yellow(`Command "${interaction.commandName}" not found.`));
                 return;
+            }
+
+            // Execute Middleware
+            if (middleware) {
+                for (const [name, fn] of Object.entries(middleware)) {
+                    if (typeof fn === 'function') {
+                        const continueExecution = await fn(interaction);
+                        if (continueExecution === false) return;
+                    }
+                }
             }
 
             // if (!interaction.deferred && !interaction.replied) {
